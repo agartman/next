@@ -65,7 +65,12 @@
   - Define shared TypeScript interfaces for frontend components
   - _Requirements: 1.1, 1.2_
 
-- [ ] 7. Create nickname entry and room interface
+- [x] 7. Create nickname entry and room interface
+
+
+
+
+
   - Build nickname input component with TypeScript and validation
   - Create room creation form with password input and type safety
   - Implement room joining interface with TypeScript
