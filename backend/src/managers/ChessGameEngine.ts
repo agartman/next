@@ -9,11 +9,12 @@ export class ChessGameEngine {
     private games: Map<string, Chess> = new Map();
     private gameStates: Map<string, ChessGameState> = new Map();
     private drawOffers: Map<string, string> = new Map(); // roomId -> playerId who offered draw
+    private playerColors: Map<string, Map<string, 'white' | 'black'>> = new Map(); // roomId -> playerId -> color
 
     /**
      * Initialize a new chess game for a room
      */
-    public initializeGame(roomId: string, _whitePlayerId: string, _blackPlayerId: string): void {
+    public initializeGame(roomId: string, whitePlayerId: string, blackPlayerId: string): void {
         const chess = new Chess();
         this.games.set(roomId, chess);
         
@@ -29,6 +30,12 @@ export class ChessGameEngine {
         
         this.gameStates.set(roomId, initialState);
         this.drawOffers.delete(roomId);
+        
+        // Store player colors
+        const playerColorMap = new Map<string, 'white' | 'black'>();
+        playerColorMap.set(whitePlayerId, 'white');
+        playerColorMap.set(blackPlayerId, 'black');
+        this.playerColors.set(roomId, playerColorMap);
     }
 
     /**
@@ -230,16 +237,17 @@ export class ChessGameEngine {
         this.games.delete(roomId);
         this.gameStates.delete(roomId);
         this.drawOffers.delete(roomId);
+        this.playerColors.delete(roomId);
     }
 
     /**
-     * Helper method to determine player color (this would need to be implemented
-     * based on how players are associated with rooms)
+     * Helper method to determine player color
      */
-    private getPlayerColor(_roomId: string, _playerId: string): 'white' | 'black' | null {
-        // This is a placeholder - in a real implementation, this would
-        // look up the player's color from the room data
-        // For now, we'll assume this information is available elsewhere
-        return null;
+    private getPlayerColor(roomId: string, playerId: string): 'white' | 'black' | null {
+        const playerColorMap = this.playerColors.get(roomId);
+        if (!playerColorMap) {
+            return null;
+        }
+        return playerColorMap.get(playerId) || null;
     }
 }

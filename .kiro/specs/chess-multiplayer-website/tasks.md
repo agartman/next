@@ -38,7 +38,12 @@
   - Write unit tests for ChessGameEngine functionality with Jest and TypeScript
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 5. Implement WebSocket communication layer
+- [x] 5. Implement WebSocket communication layer
+
+
+
+
+
   - Define TypeScript interfaces for all Socket.io event payloads
   - Set up Socket.io server with typed event handlers
   - Create room joining and creation events with type validation

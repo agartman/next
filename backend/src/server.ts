@@ -3,18 +3,32 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { SessionManager } from './managers/SessionManager';
+import { RoomManager } from './managers/RoomManager';
+import { ChessGameEngine } from './managers/ChessGameEngine';
+import { WebSocketHandler } from './handlers/WebSocketHandler';
+import { 
+    ClientToServerEvents, 
+    ServerToClientEvents, 
+    InterServerEvents, 
+    SocketData 
+} from './types/websocket';
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server, {
+const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, {
     cors: {
         origin: "http://localhost:3000",
         methods: ["GET", "POST"]
     }
 });
 
-// Initialize session manager
+// Initialize managers
 const sessionManager = new SessionManager();
+const roomManager = new RoomManager();
+const gameEngine = new ChessGameEngine();
+
+// Initialize WebSocket handler
+new WebSocketHandler(io, sessionManager, roomManager, gameEngine);
 
 // Middleware
 app.use(cors());
@@ -25,48 +39,8 @@ app.get('/health', (_req, res) => {
     res.json({
         status: 'OK',
         message: 'Chess backend server is running',
-        activeSessions: sessionManager.getSessionCount()
-    });
-});
-
-// Socket.io connection handling
-io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
-
-    // Handle session creation when user provides nickname
-    socket.on('create-session', (data: { nickname: string }) => {
-        try {
-            const session = sessionManager.createSession({
-                nickname: data.nickname,
-                socketId: socket.id
-            });
-
-            socket.emit('session-created', {
-                success: true,
-                session: {
-                    id: session.id,
-                    nickname: session.nickname
-                }
-            });
-
-            console.log(`Session created for ${session.nickname} (${session.id})`);
-        } catch (error) {
-            socket.emit('session-created', {
-                success: false,
-                error: error instanceof Error ? error.message : 'Failed to create session'
-            });
-        }
-    });
-
-    // Handle disconnect - cleanup session
-    socket.on('disconnect', () => {
-        const session = sessionManager.getSession(socket.id);
-        if (session) {
-            console.log(`User ${session.nickname} disconnected (${session.id})`);
-            sessionManager.removeSession(socket.id);
-        } else {
-            console.log('User disconnected:', socket.id);
-        }
+        activeSessions: sessionManager.getSessionCount(),
+        activeRooms: roomManager.getRoomCount()
     });
 });
 
