@@ -16,12 +16,6 @@
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
 - [x] 3. Build room management system
-
-
-
-
-
-
   - Define TypeScript interfaces for GameRoom and related types
   - Create RoomManager class for password-protected rooms with type safety
   - Implement room creation with password validation
@@ -30,7 +24,12 @@
   - Write unit tests for RoomManager functionality with Jest and TypeScript
   - _Requirements: 2.1, 2.2, 2.5_
 
-- [ ] 4. Integrate chess game engine
+- [x] 4. Integrate chess game engine
+
+
+
+
+
   - Define TypeScript interfaces for ChessGameState, ChessMove, and GameResult
   - Set up Chess.js library integration with TypeScript types
   - Create ChessGameEngine class wrapper with full type safety
