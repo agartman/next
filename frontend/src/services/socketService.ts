@@ -3,8 +3,8 @@
  */
 
 import { io, Socket } from 'socket.io-client';
-import { 
-  ClientToServerEvents, 
+import {
+  ClientToServerEvents,
   ServerToClientEvents,
   CreateSessionPayload,
   CreateRoomPayload,
@@ -93,6 +93,14 @@ class SocketService {
     this.socket?.emit('join-room', payload);
   }
 
+  startGame(): void {
+    this.socket?.emit('start-game', {});
+  }
+
+  getRoomStatus(): void {
+    this.socket?.emit('get-room-status', {});
+  }
+
   makeMove(move: ChessMove): void {
     this.socket?.emit('make-move', { move });
   }
@@ -132,6 +140,10 @@ class SocketService {
 
   onGameStarted(callback: (data: any) => void): void {
     this.socket?.on('game-started', callback);
+  }
+
+  onRoomStatus(callback: (data: any) => void): void {
+    this.socket?.on('room-status', callback);
   }
 
   onMoveMade(callback: (data: any) => void): void {

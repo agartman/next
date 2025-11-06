@@ -243,17 +243,20 @@ describe('WebSocketHandler', () => {
             const roomResponse: any = await roomPromise;
             roomId = roomResponse.roomId;
 
-            // Set up game-started listener before joining room
-            const gameStartPromise = new Promise((resolve) => {
-                clientSocket.on('game-started', resolve);
-            });
-
             // Join room
             const joinPromise = new Promise((resolve) => {
                 client2.on('room-joined', resolve);
             });
             client2.emit('join-room', { roomId, password: 'testpass' });
             await joinPromise;
+
+            // Set up game-started listener
+            const gameStartPromise = new Promise((resolve) => {
+                clientSocket.on('game-started', resolve);
+            });
+
+            // Manually start the game (white player starts)
+            clientSocket.emit('start-game', {});
 
             // Wait for game to start
             gameStartResponse = await gameStartPromise;
@@ -265,11 +268,58 @@ describe('WebSocketHandler', () => {
             }
         });
 
-        test('should start game when room is full', async () => {
+        test('should start game when white player clicks start', async () => {
             // Game should already be started from beforeEach
             expect(gameStartResponse.gameState).toBeDefined();
             expect(gameStartResponse.gameState.turn).toBe('white');
             expect(gameStartResponse.opponent.nickname).toBe('Player2');
+        });
+
+        test('should reject game start from black player', async () => {
+            // Create a separate test setup without auto-starting the game
+            const testClient1 = await connectClient();
+            const testClient2 = await connectClient();
+
+            // Create sessions
+            const session1Promise = new Promise((resolve) => {
+                testClient1.on('session-created', resolve);
+            });
+            testClient1.emit('create-session', { nickname: 'TestPlayer1' });
+            await session1Promise;
+
+            const session2Promise = new Promise((resolve) => {
+                testClient2.on('session-created', resolve);
+            });
+            testClient2.emit('create-session', { nickname: 'TestPlayer2' });
+            await session2Promise;
+
+            // Create room
+            const roomPromise = new Promise((resolve) => {
+                testClient1.on('room-created', resolve);
+            });
+            testClient1.emit('create-room', { password: 'testpass' });
+            const roomResponse: any = await roomPromise;
+
+            // Join room
+            const joinPromise = new Promise((resolve) => {
+                testClient2.on('room-joined', resolve);
+            });
+            testClient2.emit('join-room', { roomId: roomResponse.roomId, password: 'testpass' });
+            await joinPromise;
+
+            // Black player tries to start game (should fail)
+            const errorPromise = new Promise((resolve) => {
+                testClient2.on('error', resolve);
+            });
+
+            testClient2.emit('start-game', {});
+
+            const errorResponse: any = await errorPromise;
+            expect(errorResponse.code).toBe('VALIDATION_ERROR');
+            expect(errorResponse.message).toContain('Only white player can start');
+
+            testClient1.disconnect();
+            testClient2.disconnect();
         });
 
         test('should handle valid chess moves', async () => {

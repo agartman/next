@@ -4,8 +4,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { socketService } from '../services/socketService';
-import { 
-  ChessGameState, 
+import {
+  ChessGameState,
   ChessMove,
   MoveMadeResponse,
   GameStartedResponse,
@@ -26,11 +26,13 @@ interface GameSyncState {
   roomId: string | null;
   isConnected: boolean;
   isGameActive: boolean;
+  isRoomReady: boolean; // Both players in room but game not started
   error: string | null;
   drawOffer: { fromPlayer: string; color: 'white' | 'black' } | null;
 }
 
 interface UseGameSyncReturn extends GameSyncState {
+  startGame: () => void;
   makeMove: (move: ChessMove) => void;
   offerDraw: () => void;
   acceptDraw: () => void;
@@ -40,14 +42,20 @@ interface UseGameSyncReturn extends GameSyncState {
   reconnect: () => Promise<void>;
 }
 
-export const useGameSync = (): UseGameSyncReturn => {
+export const useGameSync = (initialRoomState?: {
+  roomId: string;
+  playerColor: 'white' | 'black';
+  nickname: string;
+  sessionId: string;
+} | null): UseGameSyncReturn => {
   const [state, setState] = useState<GameSyncState>({
     gameState: null,
-    playerColor: null,
+    playerColor: initialRoomState?.playerColor || null,
     opponent: null,
-    roomId: null,
+    roomId: initialRoomState?.roomId || null,
     isConnected: false,
     isGameActive: false,
+    isRoomReady: false,
     error: null,
     drawOffer: null
   });
@@ -59,6 +67,20 @@ export const useGameSync = (): UseGameSyncReturn => {
     if (eventListenersSetup.current) return;
     eventListenersSetup.current = true;
 
+    // Room status event - this will give us current room state
+    socketService.onRoomStatus((data: any) => {
+      setState(prev => ({
+        ...prev,
+        playerColor: data.playerColor,
+        opponent: data.opponent || null,
+        roomId: data.roomId,
+        isRoomReady: data.isRoomReady,
+        isGameActive: data.isGameActive,
+        gameState: data.gameState || null,
+        error: null
+      }));
+    });
+
     // Game started event
     socketService.onGameStarted((data: GameStartedResponse) => {
       setState(prev => ({
@@ -67,6 +89,7 @@ export const useGameSync = (): UseGameSyncReturn => {
         playerColor: data.playerColor,
         opponent: data.opponent,
         isGameActive: true,
+        isRoomReady: false,
         error: null
       }));
     });
@@ -75,9 +98,9 @@ export const useGameSync = (): UseGameSyncReturn => {
     socketService.onPlayerJoined((data: PlayerJoinedResponse) => {
       setState(prev => ({
         ...prev,
-        gameState: data.gameState,
         opponent: data.opponent,
-        isGameActive: true,
+        isRoomReady: true,
+        isGameActive: false, // Game is not active until manually started
         error: null
       }));
     });
@@ -163,7 +186,7 @@ export const useGameSync = (): UseGameSyncReturn => {
     });
   }, []);
 
-  // Check connection status
+  // Check connection status and initialize room state
   useEffect(() => {
     const checkConnection = () => {
       const isConnected = socketService.isConnected();
@@ -189,14 +212,70 @@ export const useGameSync = (): UseGameSyncReturn => {
     };
   }, [setupEventListeners]);
 
+  // Initialize room state when we have both player color and opponent
+  useEffect(() => {
+    if (state.playerColor && state.opponent && !state.isGameActive && !state.isRoomReady) {
+      setState(prev => ({
+        ...prev,
+        isRoomReady: true
+      }));
+    }
+  }, [state.playerColor, state.opponent, state.isGameActive, state.isRoomReady]);
+
+  // Periodically request room status if we don't have opponent info yet
+  useEffect(() => {
+    if (state.isConnected && state.playerColor && !state.opponent && !state.isGameActive) {
+      const interval = setInterval(() => {
+        socketService.getRoomStatus();
+      }, 2000);
+
+      return () => clearInterval(interval);
+    }
+  }, [state.isConnected, state.playerColor, state.opponent, state.isGameActive]);
+
   // Setup event listeners when connection is established
   useEffect(() => {
     if (state.isConnected && !eventListenersSetup.current) {
       setupEventListeners();
+
+      // Request current room status if we have initial room state
+      if (initialRoomState) {
+        setTimeout(() => {
+          socketService.getRoomStatus();
+        }, 100); // Small delay to ensure listeners are set up
+      }
     }
-  }, [state.isConnected, setupEventListeners]);
+  }, [state.isConnected, setupEventListeners, initialRoomState]);
 
   // Game actions
+  const startGame = useCallback(() => {
+    if (!state.isConnected) {
+      setState(prev => ({
+        ...prev,
+        error: 'Cannot start game: not connected'
+      }));
+      return;
+    }
+
+    if (state.playerColor !== 'white') {
+      setState(prev => ({
+        ...prev,
+        error: 'Only white player can start the game'
+      }));
+      return;
+    }
+
+    if (state.isGameActive) {
+      setState(prev => ({
+        ...prev,
+        error: 'Game is already active'
+      }));
+      return;
+    }
+
+    socketService.startGame();
+  }, [state.isConnected, state.playerColor, state.isGameActive]);
+
   const makeMove = useCallback((move: ChessMove) => {
     if (!state.isConnected || !state.isGameActive) {
       setState(prev => ({
@@ -300,6 +379,7 @@ export const useGameSync = (): UseGameSyncReturn => {
 
   return {
     ...state,
+    startGame,
     makeMove,
     offerDraw,
     acceptDraw,

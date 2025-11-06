@@ -71,6 +71,16 @@ export class WebSocketHandler {
                 this.handleDeclineDraw(socket, data);
             });
 
+            // Handle game start
+            socket.on('start-game', (data) => {
+                this.handleStartGame(socket, data);
+            });
+
+            // Handle room status request
+            socket.on('get-room-status', (data) => {
+                this.handleGetRoomStatus(socket, data);
+            });
+
             // Handle resignation
             socket.on('resign', (data) => {
                 this.handleResign(socket, data);
@@ -209,40 +219,7 @@ export class WebSocketHandler {
                 }
             }
 
-            // If room is now full, start the game
-            if (room.players.length === 2 && !room.gameState) {
-                const whitePlayer = room.players.find(p => p.color === 'white');
-                const blackPlayer = room.players.find(p => p.color === 'black');
-
-                if (whitePlayer && blackPlayer) {
-                    this.gameEngine.initializeGame(data.roomId, whitePlayer.sessionId, blackPlayer.sessionId);
-                    const gameState = this.gameEngine.getGameState(data.roomId);
-
-                    if (gameState) {
-                        room.gameState = gameState;
-
-                        // Get both player sessions for proper opponent info
-                        const whiteSession = this.sessionManager.getSessionById(whitePlayer.sessionId);
-                        const blackSession = this.sessionManager.getSessionById(blackPlayer.sessionId);
-
-                        if (whiteSession && blackSession) {
-                            // Notify white player
-                            this.io.to(whiteSession.socketId).emit('game-started', {
-                                gameState,
-                                playerColor: 'white',
-                                opponent: { nickname: blackSession.nickname }
-                            });
-
-                            // Notify black player
-                            this.io.to(blackSession.socketId).emit('game-started', {
-                                gameState,
-                                playerColor: 'black',
-                                opponent: { nickname: whiteSession.nickname }
-                            });
-                        }
-                    }
-                }
-            }
+            // Room is now full, but game will be started manually by white player
 
             socket.emit('room-joined', {
                 success: true,
@@ -457,6 +434,125 @@ export class WebSocketHandler {
             console.log(`Draw declined by ${session.nickname} in room ${session.currentRoom}`);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to decline draw';
+            this.sendError(socket, 'VALIDATION_ERROR', errorMessage);
+        }
+    }
+
+    private handleGetRoomStatus(socket: TypedSocket, _data: any): void {
+        try {
+            const session = this.getSessionFromSocket(socket);
+            if (!session || !session.currentRoom) {
+                this.sendError(socket, 'SESSION_NOT_FOUND', 'Session or room not found');
+                return;
+            }
+
+            const room = this.roomManager.getRoomState(session.currentRoom);
+            if (!room) {
+                this.sendError(socket, 'ROOM_NOT_FOUND', 'Room not found');
+                return;
+            }
+
+            const player = room.players.find(p => p.sessionId === session.id);
+            if (!player) {
+                this.sendError(socket, 'SESSION_NOT_FOUND', 'Player not found in room');
+                return;
+            }
+
+            // Get opponent info
+            const opponentPlayer = room.players.find(p => p.sessionId !== session.id);
+            let opponent = null;
+            if (opponentPlayer) {
+                const opponentSession = this.sessionManager.getSessionById(opponentPlayer.sessionId);
+                if (opponentSession) {
+                    opponent = { nickname: opponentSession.nickname };
+                }
+            }
+
+            socket.emit('room-status', {
+                roomId: room.id,
+                playerColor: player.color,
+                opponent: opponent || undefined,
+                gameState: room.gameState || undefined,
+                isGameActive: room.status === 'active' && !!room.gameState,
+                isRoomReady: room.players.length === 2 && !room.gameState
+            });
+
+
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to get room status';
+            this.sendError(socket, 'VALIDATION_ERROR', errorMessage);
+        }
+    }
+
+    private handleStartGame(socket: TypedSocket, _data: any): void {
+        try {
+            const session = this.getSessionFromSocket(socket);
+            if (!session || !session.currentRoom) {
+                this.sendError(socket, 'SESSION_NOT_FOUND', 'Session or room not found');
+                return;
+            }
+
+            const room = this.roomManager.getRoomState(session.currentRoom);
+            if (!room) {
+                this.sendError(socket, 'ROOM_NOT_FOUND', 'Room not found');
+                return;
+            }
+
+            // Only white player can start the game
+            const player = room.players.find(p => p.sessionId === session.id);
+            if (!player || player.color !== 'white') {
+                this.sendError(socket, 'VALIDATION_ERROR', 'Only white player can start the game');
+                return;
+            }
+
+            // Check if room has exactly 2 players
+            if (room.players.length !== 2) {
+                this.sendError(socket, 'VALIDATION_ERROR', 'Room must have exactly 2 players to start');
+                return;
+            }
+
+            // Check if game is already started
+            if (room.gameState) {
+                this.sendError(socket, 'VALIDATION_ERROR', 'Game is already started');
+                return;
+            }
+
+            const whitePlayer = room.players.find(p => p.color === 'white');
+            const blackPlayer = room.players.find(p => p.color === 'black');
+
+            if (whitePlayer && blackPlayer) {
+                this.gameEngine.initializeGame(session.currentRoom, whitePlayer.sessionId, blackPlayer.sessionId);
+                const gameState = this.gameEngine.getGameState(session.currentRoom);
+
+                if (gameState) {
+                    room.gameState = gameState;
+                    room.status = 'active';
+
+                    // Get both player sessions for proper opponent info
+                    const whiteSession = this.sessionManager.getSessionById(whitePlayer.sessionId);
+                    const blackSession = this.sessionManager.getSessionById(blackPlayer.sessionId);
+
+                    if (whiteSession && blackSession) {
+                        // Notify white player
+                        this.io.to(whiteSession.socketId).emit('game-started', {
+                            gameState,
+                            playerColor: 'white',
+                            opponent: { nickname: blackSession.nickname }
+                        });
+
+                        // Notify black player
+                        this.io.to(blackSession.socketId).emit('game-started', {
+                            gameState,
+                            playerColor: 'black',
+                            opponent: { nickname: whiteSession.nickname }
+                        });
+
+                        console.log(`Game started in room ${session.currentRoom} by ${session.nickname}`);
+                    }
+                }
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to start game';
             this.sendError(socket, 'VALIDATION_ERROR', errorMessage);
         }
     }

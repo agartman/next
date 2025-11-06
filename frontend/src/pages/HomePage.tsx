@@ -49,8 +49,15 @@ export const HomePage: React.FC = () => {
     setGameData(data);
     console.log('Game ready with data:', data);
 
-    // Navigate to the game page
-    navigate('/game');
+    // Navigate to the game page with state
+    navigate('/game', {
+      state: {
+        roomId: data.roomId,
+        playerColor: data.playerColor,
+        nickname: data.nickname,
+        sessionId: data.sessionId
+      }
+    });
   };
 
   return (

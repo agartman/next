@@ -3,6 +3,7 @@
  */
 
 import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { ChessBoard } from '../components/ChessBoard';
 import { useChessBoard } from '../hooks/useChessBoard';
@@ -55,12 +56,12 @@ const ColorIndicator = styled.span<{ $color: 'white' | 'black' | null }>`
   padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
   border-radius: 4px;
   font-size: ${({ theme }) => theme.typography.fontSize.small};
-  background-color: ${({ theme, $color }) => 
-    $color === 'white' ? theme.colors.chess.lightSquare : 
-    $color === 'black' ? theme.colors.chess.darkSquare : 
-    theme.colors.surface
+  background-color: ${({ theme, $color }) =>
+    $color === 'white' ? theme.colors.chess.lightSquare :
+      $color === 'black' ? theme.colors.chess.darkSquare :
+        theme.colors.surface
   };
-  color: ${({ theme, $color }) => 
+  color: ${({ theme, $color }) =>
     $color === 'black' ? theme.colors.text.inverse : theme.colors.text.primary
   };
 `;
@@ -69,7 +70,7 @@ const ConnectionStatus = styled.div<{ $connected: boolean }>`
   padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
   border-radius: 4px;
   font-size: ${({ theme }) => theme.typography.fontSize.small};
-  background-color: ${({ theme, $connected }) => 
+  background-color: ${({ theme, $connected }) =>
     $connected ? theme.colors.status.success : theme.colors.status.error
   };
   color: ${({ theme }) => theme.colors.text.inverse};
@@ -107,6 +108,14 @@ const ReconnectButton = styled.button`
 `;
 
 export const GamePage: React.FC = () => {
+  const location = useLocation();
+  const roomState = location.state as {
+    roomId: string;
+    playerColor: 'white' | 'black';
+    nickname: string;
+    sessionId: string;
+  } | null;
+
   // Use real-time game synchronization
   const {
     gameState,
@@ -116,6 +125,7 @@ export const GamePage: React.FC = () => {
     isGameActive,
     error,
     drawOffer,
+    startGame,
     makeMove,
     offerDraw,
     acceptDraw,
@@ -123,7 +133,7 @@ export const GamePage: React.FC = () => {
     resign,
     clearError,
     reconnect
-  } = useGameSync();
+  } = useGameSync(roomState);
 
   // Connect to socket on mount
   useEffect(() => {
@@ -166,6 +176,10 @@ export const GamePage: React.FC = () => {
     declineDraw();
   };
 
+  const handleStartGame = () => {
+    startGame();
+  };
+
   const handleReconnect = async () => {
     await reconnect();
   };
@@ -177,7 +191,7 @@ export const GamePage: React.FC = () => {
   return (
     <GameContainer>
       <GameTitle>Chess Game</GameTitle>
-      
+
       {/* Connection Status */}
       <ConnectionStatus $connected={isConnected}>
         {isConnected ? 'Connected' : 'Disconnected'}
@@ -209,7 +223,7 @@ export const GamePage: React.FC = () => {
           </DrawOfferButtons>
         </DrawOfferDialog>
       )}
-      
+
       <PlayerInfo>
         <PlayerName>You are playing as:</PlayerName>
         <ColorIndicator $color={playerColor}>
@@ -217,6 +231,16 @@ export const GamePage: React.FC = () => {
         </ColorIndicator>
         {opponent && (
           <PlayerName>vs {opponent.nickname}</PlayerName>
+        )}
+        {!isGameActive && opponent && playerColor === 'white' && (
+          <PlayerName style={{ color: '#4CAF50', fontWeight: 'bold' }}>
+            Ready to start! Click "Start Game" below.
+          </PlayerName>
+        )}
+        {!isGameActive && opponent && playerColor === 'black' && (
+          <PlayerName style={{ color: '#FF9800', fontWeight: 'bold' }}>
+            Waiting for white player to start the game...
+          </PlayerName>
         )}
       </PlayerInfo>
 
@@ -231,13 +255,21 @@ export const GamePage: React.FC = () => {
       />
 
       <GameControls>
-        <ControlButton 
+        {!isGameActive && playerColor === 'white' && (
+          <ControlButton
+            onClick={handleStartGame}
+            disabled={!isConnected || !opponent}
+          >
+            {opponent ? 'Start Game' : 'Waiting for opponent...'}
+          </ControlButton>
+        )}
+        <ControlButton
           onClick={handleOfferDraw}
           disabled={!isGameActive || gameState?.isCheckmate || gameState?.isStalemate || !!drawOffer}
         >
           {drawOffer ? 'Draw Offered' : 'Offer Draw'}
         </ControlButton>
-        <ControlButton 
+        <ControlButton
           onClick={handleResign}
           disabled={!isGameActive || gameState?.isCheckmate || gameState?.isStalemate}
         >

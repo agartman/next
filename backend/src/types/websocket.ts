@@ -9,6 +9,8 @@ export interface ClientToServerEvents {
     'create-session': (data: CreateSessionPayload) => void;
     'create-room': (data: CreateRoomPayload) => void;
     'join-room': (data: JoinRoomPayload) => void;
+    'start-game': (data: StartGamePayload) => void;
+    'get-room-status': (data: GetRoomStatusPayload) => void;
     'make-move': (data: MakeMovePayload) => void;
     'offer-draw': (data: OfferDrawPayload) => void;
     'accept-draw': (data: AcceptDrawPayload) => void;
@@ -23,6 +25,7 @@ export interface ServerToClientEvents {
     'room-joined': (data: RoomJoinedResponse) => void;
     'player-joined': (data: PlayerJoinedResponse) => void;
     'game-started': (data: GameStartedResponse) => void;
+    'room-status': (data: RoomStatusResponse) => void;
     'move-made': (data: MoveMadeResponse) => void;
     'game-over': (data: GameOverResponse) => void;
     'draw-offered': (data: DrawOfferedResponse) => void;
@@ -62,6 +65,14 @@ export interface AcceptDrawPayload {
 }
 
 export interface DeclineDrawPayload {
+    // No additional data needed - room and player inferred from session
+}
+
+export interface StartGamePayload {
+    // No additional data needed - room and player inferred from session
+}
+
+export interface GetRoomStatusPayload {
     // No additional data needed - room and player inferred from session
 }
 
@@ -112,6 +123,17 @@ export interface GameStartedResponse {
     };
 }
 
+export interface RoomStatusResponse {
+    roomId: string;
+    playerColor: 'white' | 'black';
+    opponent?: {
+        nickname: string;
+    };
+    gameState?: ChessGameState;
+    isGameActive: boolean;
+    isRoomReady: boolean;
+}
+
 export interface MoveMadeResponse {
     move: ChessMove;
     gameState: ChessGameState;
@@ -159,9 +181,9 @@ export interface PlayerLeftResponse {
 }
 
 export interface ErrorResponse {
-    code: 'INVALID_MOVE' | 'ROOM_FULL' | 'WRONG_PASSWORD' | 'SESSION_NOT_FOUND' | 
-          'ROOM_NOT_FOUND' | 'NOT_YOUR_TURN' | 'GAME_NOT_ACTIVE' | 'INVALID_NICKNAME' |
-          'INVALID_PASSWORD' | 'ALREADY_IN_ROOM' | 'NO_DRAW_OFFER' | 'VALIDATION_ERROR';
+    code: 'INVALID_MOVE' | 'ROOM_FULL' | 'WRONG_PASSWORD' | 'SESSION_NOT_FOUND' |
+    'ROOM_NOT_FOUND' | 'NOT_YOUR_TURN' | 'GAME_NOT_ACTIVE' | 'INVALID_NICKNAME' |
+    'INVALID_PASSWORD' | 'ALREADY_IN_ROOM' | 'NO_DRAW_OFFER' | 'VALIDATION_ERROR';
     message: string;
 }
 
