@@ -12,202 +12,202 @@ import { theme } from '../styles/theme';
 
 // Test wrapper with theme
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <ThemeProvider theme={theme}>{children}</ThemeProvider>
+  <ThemeProvider theme={theme}>{children}</ThemeProvider>
 );
 
 describe('RoomCreation', () => {
-    const mockOnCreateRoom = vi.fn();
-    const mockOnCancel = vi.fn();
+  const mockOnCreateRoom = vi.fn();
+  const mockOnCancel = vi.fn();
 
-    beforeEach(() => {
-        mockOnCreateRoom.mockClear();
-        mockOnCancel.mockClear();
+  beforeEach(() => {
+    mockOnCreateRoom.mockClear();
+    mockOnCancel.mockClear();
+  });
+
+  it('renders room creation form', () => {
+    render(
+      <TestWrapper>
+        <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
+      </TestWrapper>
+    );
+
+    expect(screen.getByText(/create new room/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/room password/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter room password/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create room/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
+  });
+
+  it('validates password input correctly', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TestWrapper>
+        <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
+      </TestWrapper>
+    );
+
+    const input = screen.getByLabelText(/room password/i);
+    const submitButton = screen.getByTestId('create-room-submit');
+
+    // Test empty password - button should be disabled
+    expect(submitButton).toBeDisabled();
+
+    // Test password too short
+    await user.type(input, 'abc');
+    await user.click(submitButton);
+    await waitFor(() => {
+      expect(screen.getByText(/password must be at least 4 characters long/i)).toBeInTheDocument();
+    });
+    expect(mockOnCreateRoom).not.toHaveBeenCalled();
+
+    // Test password too long - since input has maxLength, we test with exactly 50 characters
+    await user.clear(input);
+    await user.type(input, 'a'.repeat(50)); // Type exactly 50 characters
+    expect(submitButton).not.toBeDisabled();
+    // This should be valid, so no error should appear
+    await user.click(submitButton);
+    expect(mockOnCreateRoom).toHaveBeenCalledWith('a'.repeat(50));
+  });
+
+  it('submits valid password', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TestWrapper>
+        <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
+      </TestWrapper>
+    );
+
+    const input = screen.getByLabelText(/room password/i);
+    const submitButton = screen.getByTestId('create-room-submit');
+
+    await user.type(input, 'validPassword123');
+    await user.click(submitButton);
+
+    expect(mockOnCreateRoom).toHaveBeenCalledWith('validPassword123');
+  });
+
+  it('handles cancel button click', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TestWrapper>
+        <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
+      </TestWrapper>
+    );
+
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    await user.click(cancelButton);
+
+    expect(mockOnCancel).toHaveBeenCalled();
+  });
+
+  it('clears validation errors when user starts typing', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TestWrapper>
+        <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
+      </TestWrapper>
+    );
+
+    const input = screen.getByLabelText(/room password/i);
+    const submitButton = screen.getByTestId('create-room-submit');
+
+    // Type short password to enable button, then trigger validation error
+    await user.type(input, 'abc');
+    expect(submitButton).not.toBeDisabled();
+    await user.click(submitButton);
+    await waitFor(() => {
+      expect(screen.getByText(/password must be at least 4 characters long/i)).toBeInTheDocument();
     });
 
-    it('renders room creation form', () => {
-        render(
-            <TestWrapper>
-                <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
-            </TestWrapper>
-        );
+    // Start typing to clear error
+    await user.type(input, 'a');
+    expect(screen.queryByText(/room password is required/i)).not.toBeInTheDocument();
+  });
 
-        expect(screen.getByText(/create new room/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/room password/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/enter room password/i)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /create room/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
-    });
+  it('shows loading state correctly', () => {
+    render(
+      <TestWrapper>
+        <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} isLoading={true} />
+      </TestWrapper>
+    );
 
-    it('validates password input correctly', async () => {
-        const user = userEvent.setup();
+    const submitButton = screen.getByTestId('create-room-submit');
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
 
-        render(
-            <TestWrapper>
-                <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
-            </TestWrapper>
-        );
+    expect(submitButton).toHaveTextContent(/creating room/i);
+    expect(submitButton).toBeDisabled();
+    expect(cancelButton).toBeDisabled();
+    expect(screen.getByLabelText(/room password/i)).toBeDisabled();
+  });
 
-        const input = screen.getByLabelText(/room password/i);
-        const submitButton = screen.getByTestId('create-room-submit');
+  it('displays server error message', () => {
+    const errorMessage = 'Failed to create room';
 
-        // Test empty password - button should be disabled
-        expect(submitButton).toBeDisabled();
+    render(
+      <TestWrapper>
+        <RoomCreation
+          onCreateRoom={mockOnCreateRoom}
+          onCancel={mockOnCancel}
+          error={errorMessage}
+        />
+      </TestWrapper>
+    );
 
-        // Test password too short
-        await user.type(input, 'abc');
-        await user.click(submitButton);
-        await waitFor(() => {
-            expect(screen.getByText(/password must be at least 4 characters long/i)).toBeInTheDocument();
-        });
-        expect(mockOnCreateRoom).not.toHaveBeenCalled();
+    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+  });
 
-        // Test password too long - since input has maxLength, we test with exactly 50 characters
-        await user.clear(input);
-        await user.type(input, 'a'.repeat(50)); // Type exactly 50 characters
-        expect(submitButton).not.toBeDisabled();
-        // This should be valid, so no error should appear
-        await user.click(submitButton);
-        expect(mockOnCreateRoom).toHaveBeenCalledWith('a'.repeat(50));
-    });
+  it('shows helper text when no error', () => {
+    render(
+      <TestWrapper>
+        <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
+      </TestWrapper>
+    );
 
-    it('submits valid password', async () => {
-        const user = userEvent.setup();
+    expect(screen.getByText(/share this password with your friend/i)).toBeInTheDocument();
+  });
 
-        render(
-            <TestWrapper>
-                <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
-            </TestWrapper>
-        );
+  it('disables submit button when password is empty', async () => {
+    const user = userEvent.setup();
 
-        const input = screen.getByLabelText(/room password/i);
-        const submitButton = screen.getByTestId('create-room-submit');
+    render(
+      <TestWrapper>
+        <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
+      </TestWrapper>
+    );
 
-        await user.type(input, 'validPassword123');
-        await user.click(submitButton);
+    const input = screen.getByLabelText(/room password/i);
+    const submitButton = screen.getByTestId('create-room-submit');
 
-        expect(mockOnCreateRoom).toHaveBeenCalledWith('validPassword123');
-    });
+    // Initially disabled
+    expect(submitButton).toBeDisabled();
 
-    it('handles cancel button click', async () => {
-        const user = userEvent.setup();
+    // Enabled when typing
+    await user.type(input, 'test');
+    expect(submitButton).not.toBeDisabled();
 
-        render(
-            <TestWrapper>
-                <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
-            </TestWrapper>
-        );
+    // Disabled when cleared
+    await user.clear(input);
+    expect(submitButton).toBeDisabled();
+  });
 
-        const cancelButton = screen.getByRole('button', { name: /cancel/i });
-        await user.click(cancelButton);
+  it('handles form submission with Enter key', async () => {
+    const user = userEvent.setup();
 
-        expect(mockOnCancel).toHaveBeenCalled();
-    });
+    render(
+      <TestWrapper>
+        <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
+      </TestWrapper>
+    );
 
-    it('clears validation errors when user starts typing', async () => {
-        const user = userEvent.setup();
+    const input = screen.getByLabelText(/room password/i);
 
-        render(
-            <TestWrapper>
-                <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
-            </TestWrapper>
-        );
+    await user.type(input, 'testPassword');
+    await user.keyboard('{Enter}');
 
-        const input = screen.getByLabelText(/room password/i);
-        const submitButton = screen.getByTestId('create-room-submit');
-
-        // Type short password to enable button, then trigger validation error
-        await user.type(input, 'abc');
-        expect(submitButton).not.toBeDisabled();
-        await user.click(submitButton);
-        await waitFor(() => {
-            expect(screen.getByText(/password must be at least 4 characters long/i)).toBeInTheDocument();
-        });
-
-        // Start typing to clear error
-        await user.type(input, 'a');
-        expect(screen.queryByText(/room password is required/i)).not.toBeInTheDocument();
-    });
-
-    it('shows loading state correctly', () => {
-        render(
-            <TestWrapper>
-                <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} isLoading={true} />
-            </TestWrapper>
-        );
-
-        const submitButton = screen.getByTestId('create-room-submit');
-        const cancelButton = screen.getByRole('button', { name: /cancel/i });
-
-        expect(submitButton).toHaveTextContent(/creating room/i);
-        expect(submitButton).toBeDisabled();
-        expect(cancelButton).toBeDisabled();
-        expect(screen.getByLabelText(/room password/i)).toBeDisabled();
-    });
-
-    it('displays server error message', () => {
-        const errorMessage = 'Failed to create room';
-
-        render(
-            <TestWrapper>
-                <RoomCreation
-                    onCreateRoom={mockOnCreateRoom}
-                    onCancel={mockOnCancel}
-                    error={errorMessage}
-                />
-            </TestWrapper>
-        );
-
-        expect(screen.getByText(errorMessage)).toBeInTheDocument();
-    });
-
-    it('shows helper text when no error', () => {
-        render(
-            <TestWrapper>
-                <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
-            </TestWrapper>
-        );
-
-        expect(screen.getByText(/share this password with your friend/i)).toBeInTheDocument();
-    });
-
-    it('disables submit button when password is empty', async () => {
-        const user = userEvent.setup();
-
-        render(
-            <TestWrapper>
-                <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
-            </TestWrapper>
-        );
-
-        const input = screen.getByLabelText(/room password/i);
-        const submitButton = screen.getByTestId('create-room-submit');
-
-        // Initially disabled
-        expect(submitButton).toBeDisabled();
-
-        // Enabled when typing
-        await user.type(input, 'test');
-        expect(submitButton).not.toBeDisabled();
-
-        // Disabled when cleared
-        await user.clear(input);
-        expect(submitButton).toBeDisabled();
-    });
-
-    it('handles form submission with Enter key', async () => {
-        const user = userEvent.setup();
-
-        render(
-            <TestWrapper>
-                <RoomCreation onCreateRoom={mockOnCreateRoom} onCancel={mockOnCancel} />
-            </TestWrapper>
-        );
-
-        const input = screen.getByLabelText(/room password/i);
-
-        await user.type(input, 'testPassword');
-        await user.keyboard('{Enter}');
-
-        expect(mockOnCreateRoom).toHaveBeenCalledWith('testPassword');
-    });
+    expect(mockOnCreateRoom).toHaveBeenCalledWith('testPassword');
+  });
 });

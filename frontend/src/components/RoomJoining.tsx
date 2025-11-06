@@ -34,8 +34,8 @@ const Label = styled.label`
 `;
 
 const Input = styled.input.withConfig({
-  shouldForwardProp: (prop) => prop !== 'hasError',
-}) <{ hasError?: boolean }>`
+  shouldForwardProp: prop => prop !== 'hasError',
+})<{ hasError?: boolean }>`
   padding: ${({ theme }) => theme.spacing.md};
   border: 2px solid
     ${({ theme, hasError }) => (hasError ? theme.colors.status.error : theme.colors.text.secondary)};
@@ -48,7 +48,7 @@ const Input = styled.input.withConfig({
   &:focus {
     outline: none;
     border-color: ${({ theme, hasError }) =>
-    hasError ? theme.colors.status.error : theme.colors.primary};
+      hasError ? theme.colors.status.error : theme.colors.primary};
   }
 
   &::placeholder {
@@ -95,9 +95,9 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary'; disabled?: boo
 
   &:hover:not(:disabled) {
     background-color: ${({ theme, variant }) =>
-    variant === 'secondary' ? theme.colors.primary : theme.colors.secondary};
+      variant === 'secondary' ? theme.colors.primary : theme.colors.secondary};
     color: ${({ theme, variant }) =>
-    variant === 'secondary' ? theme.colors.text.inverse : theme.colors.text.inverse};
+      variant === 'secondary' ? theme.colors.text.inverse : theme.colors.text.inverse};
   }
 
   &:focus {
