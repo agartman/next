@@ -38,7 +38,8 @@ class SocketService {
 
       this.isConnecting = true;
 
-      this.socket = io('http://localhost:3001', {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      this.socket = io(backendUrl, {
         transports: ['websocket', 'polling'],
         timeout: 5000,
         reconnection: true,
