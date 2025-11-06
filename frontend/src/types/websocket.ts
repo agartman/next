@@ -36,7 +36,7 @@ export interface ClientToServerEvents {
   'offer-draw': (data: OfferDrawPayload) => void;
   'accept-draw': (data: AcceptDrawPayload) => void;
   'decline-draw': (data: DeclineDrawPayload) => void;
-  'resign': (data: ResignPayload) => void;
+  resign: (data: ResignPayload) => void;
 }
 
 // Server to Client Events
@@ -54,7 +54,7 @@ export interface ServerToClientEvents {
   'draw-declined': (data: DrawDeclinedResponse) => void;
   'player-resigned': (data: PlayerResignedResponse) => void;
   'player-left': (data: PlayerLeftResponse) => void;
-  'error': (data: ErrorResponse) => void;
+  error: (data: ErrorResponse) => void;
 }
 
 // Event Payload Interfaces
@@ -202,8 +202,18 @@ export interface PlayerLeftResponse {
 }
 
 export interface ErrorResponse {
-  code: 'INVALID_MOVE' | 'ROOM_FULL' | 'WRONG_PASSWORD' | 'SESSION_NOT_FOUND' |
-  'ROOM_NOT_FOUND' | 'NOT_YOUR_TURN' | 'GAME_NOT_ACTIVE' | 'INVALID_NICKNAME' |
-  'INVALID_PASSWORD' | 'ALREADY_IN_ROOM' | 'NO_DRAW_OFFER' | 'VALIDATION_ERROR';
+  code:
+    | 'INVALID_MOVE'
+    | 'ROOM_FULL'
+    | 'WRONG_PASSWORD'
+    | 'SESSION_NOT_FOUND'
+    | 'ROOM_NOT_FOUND'
+    | 'NOT_YOUR_TURN'
+    | 'GAME_NOT_ACTIVE'
+    | 'INVALID_NICKNAME'
+    | 'INVALID_PASSWORD'
+    | 'ALREADY_IN_ROOM'
+    | 'NO_DRAW_OFFER'
+    | 'VALIDATION_ERROR';
   message: string;
 }

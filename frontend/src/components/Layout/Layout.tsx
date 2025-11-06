@@ -50,8 +50,12 @@ const LoadingSpinner = styled.div`
   animation: spin 1s linear infinite;
 
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 `;
 
@@ -62,21 +66,16 @@ interface LayoutProps {
   isLoading?: boolean;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ 
-  children, 
-  connectionStatus, 
+export const Layout: React.FC<LayoutProps> = ({
+  children,
+  connectionStatus,
   connectionError,
-  isLoading = false
+  isLoading = false,
 }) => {
   return (
     <LayoutContainer>
-      <Header 
-        connectionStatus={connectionStatus} 
-        connectionError={connectionError}
-      />
-      <MainContent>
-        {children}
-      </MainContent>
+      <Header connectionStatus={connectionStatus} connectionError={connectionError} />
+      <MainContent>{children}</MainContent>
       {isLoading && (
         <LoadingOverlay>
           <LoadingSpinner />

@@ -55,8 +55,8 @@ export const HomePage: React.FC = () => {
         roomId: data.roomId,
         playerColor: data.playerColor,
         nickname: data.nickname,
-        sessionId: data.sessionId
-      }
+        sessionId: data.sessionId,
+      },
     });
   };
 

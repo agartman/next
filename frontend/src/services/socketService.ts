@@ -9,7 +9,7 @@ import {
   CreateSessionPayload,
   CreateRoomPayload,
   JoinRoomPayload,
-  ChessMove
+  ChessMove,
 } from '../types/websocket';
 
 class SocketService {
@@ -52,13 +52,13 @@ class SocketService {
         resolve(this.socket!);
       });
 
-      this.socket.on('connect_error', (error) => {
+      this.socket.on('connect_error', error => {
         console.error('Connection error:', error);
         this.isConnecting = false;
         reject(error);
       });
 
-      this.socket.on('disconnect', (reason) => {
+      this.socket.on('disconnect', reason => {
         console.log('Disconnected from server:', reason);
       });
     });

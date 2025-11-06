@@ -31,20 +31,20 @@ export const PIECE_SYMBOLS: Record<string, string> = {
 // Convert FEN piece notation to piece object
 export const fenToPiece = (fenChar: string): ChessPiece | null => {
   const pieceMap: Record<string, ChessPiece> = {
-    'K': { type: 'king', color: 'white' },
-    'Q': { type: 'queen', color: 'white' },
-    'R': { type: 'rook', color: 'white' },
-    'B': { type: 'bishop', color: 'white' },
-    'N': { type: 'knight', color: 'white' },
-    'P': { type: 'pawn', color: 'white' },
-    'k': { type: 'king', color: 'black' },
-    'q': { type: 'queen', color: 'black' },
-    'r': { type: 'rook', color: 'black' },
-    'b': { type: 'bishop', color: 'black' },
-    'n': { type: 'knight', color: 'black' },
-    'p': { type: 'pawn', color: 'black' },
+    K: { type: 'king', color: 'white' },
+    Q: { type: 'queen', color: 'white' },
+    R: { type: 'rook', color: 'white' },
+    B: { type: 'bishop', color: 'white' },
+    N: { type: 'knight', color: 'white' },
+    P: { type: 'pawn', color: 'white' },
+    k: { type: 'king', color: 'black' },
+    q: { type: 'queen', color: 'black' },
+    r: { type: 'rook', color: 'black' },
+    b: { type: 'bishop', color: 'black' },
+    n: { type: 'knight', color: 'black' },
+    p: { type: 'pawn', color: 'black' },
   };
-  
+
   return pieceMap[fenChar] || null;
 };
 
@@ -56,11 +56,13 @@ export const getPieceSymbol = (piece: ChessPiece): string => {
 
 // Parse FEN string to board position
 export const parseFenToBoard = (fen: string): (ChessPiece | null)[][] => {
-  const board: (ChessPiece | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
+  const board: (ChessPiece | null)[][] = Array(8)
+    .fill(null)
+    .map(() => Array(8).fill(null));
   const fenParts = fen.split(' ');
   const position = fenParts[0];
   const ranks = position.split('/');
-  
+
   ranks.forEach((rank, rankIndex) => {
     let fileIndex = 0;
     for (const char of rank) {
@@ -77,7 +79,7 @@ export const parseFenToBoard = (fen: string): (ChessPiece | null)[][] => {
       }
     }
   });
-  
+
   return board;
 };
 

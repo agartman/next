@@ -29,11 +29,13 @@ chess-multiplayer-website/
 ### Installation
 
 1. Install dependencies for both frontend and backend:
+
 ```bash
 npm run install:all
 ```
 
 Or install individually:
+
 ```bash
 npm run install:frontend
 npm run install:backend
@@ -42,15 +44,18 @@ npm run install:backend
 ### Development
 
 1. Start both frontend and backend in development mode:
+
 ```bash
 npm run dev
 ```
 
 This will start:
+
 - Backend server on http://localhost:3001
 - Frontend development server on http://localhost:3000
 
 Or run individually:
+
 ```bash
 npm run dev:backend  # Start backend only
 npm run dev:frontend # Start frontend only
@@ -77,6 +82,7 @@ npm run lint
 ## Technology Stack
 
 ### Frontend
+
 - React 18 with TypeScript
 - Vite for build tooling
 - Socket.io client for real-time communication
@@ -84,6 +90,7 @@ npm run lint
 - Chess.js for chess logic
 
 ### Backend
+
 - Node.js with Express and TypeScript
 - Socket.io for WebSocket communication
 - Chess.js for game logic validation

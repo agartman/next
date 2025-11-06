@@ -9,7 +9,8 @@ import { socketService } from './services/socketService';
 import { ConnectionStatusProps } from './types/game';
 
 function App() {
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatusProps['status']>('disconnected');
+  const [connectionStatus, setConnectionStatus] =
+    useState<ConnectionStatusProps['status']>('disconnected');
   const [connectionError, setConnectionError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -18,7 +19,7 @@ function App() {
     const initializeConnection = async () => {
       setConnectionStatus('connecting');
       setIsLoading(true);
-      
+
       try {
         await socketService.connect();
         setConnectionStatus('connected');
@@ -46,7 +47,7 @@ function App() {
         setConnectionStatus('disconnected');
       });
 
-      socket.on('connect_error', (error) => {
+      socket.on('connect_error', error => {
         setConnectionStatus('error');
         setConnectionError(error.message);
       });
@@ -62,7 +63,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyles />
-      <Layout 
+      <Layout
         connectionStatus={connectionStatus}
         connectionError={connectionError}
         isLoading={isLoading}

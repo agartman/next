@@ -27,8 +27,8 @@ const Label = styled.label`
 
 const Input = styled.input<{ hasError?: boolean }>`
   padding: ${({ theme }) => theme.spacing.md};
-  border: 2px solid ${({ theme, hasError }) => 
-    hasError ? theme.colors.status.error : theme.colors.text.secondary};
+  border: 2px solid
+    ${({ theme, hasError }) => (hasError ? theme.colors.status.error : theme.colors.text.secondary)};
   border-radius: 8px;
   font-size: ${({ theme }) => theme.typography.fontSize.medium};
   background-color: ${({ theme }) => theme.colors.surface};
@@ -37,7 +37,7 @@ const Input = styled.input<{ hasError?: boolean }>`
 
   &:focus {
     outline: none;
-    border-color: ${({ theme, hasError }) => 
+    border-color: ${({ theme, hasError }) =>
       hasError ? theme.colors.status.error : theme.colors.primary};
   }
 
@@ -54,14 +54,14 @@ const ErrorMessage = styled.div`
 
 const SubmitButton = styled.button<{ disabled?: boolean }>`
   padding: ${({ theme }) => theme.spacing.md};
-  background-color: ${({ theme, disabled }) => 
+  background-color: ${({ theme, disabled }) =>
     disabled ? theme.colors.text.secondary : theme.colors.primary};
   color: ${({ theme }) => theme.colors.text.inverse};
   border: none;
   border-radius: 8px;
   font-size: ${({ theme }) => theme.typography.fontSize.medium};
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-  cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
+  cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
   transition: background-color 0.2s ease;
 
   &:hover:not(:disabled) {
@@ -83,7 +83,7 @@ export interface NicknameEntryProps {
 export const NicknameEntry: React.FC<NicknameEntryProps> = ({
   onSubmit,
   isLoading = false,
-  error
+  error,
 }) => {
   const [nickname, setNickname] = useState('');
   const [validationError, setValidationError] = useState('');
@@ -107,7 +107,7 @@ export const NicknameEntry: React.FC<NicknameEntryProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setNickname(value);
-    
+
     // Clear validation error when user starts typing
     if (validationError) {
       setValidationError('');
@@ -116,10 +116,10 @@ export const NicknameEntry: React.FC<NicknameEntryProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const trimmedNickname = nickname.trim();
     const error = validateNickname(trimmedNickname);
-    
+
     if (error) {
       setValidationError(error);
       return;
@@ -150,11 +150,7 @@ export const NicknameEntry: React.FC<NicknameEntryProps> = ({
           />
           {displayError && <ErrorMessage>{displayError}</ErrorMessage>}
         </InputGroup>
-        <SubmitButton 
-          type="submit" 
-          disabled={isDisabled}
-          data-testid="nickname-submit"
-        >
+        <SubmitButton type="submit" disabled={isDisabled} data-testid="nickname-submit">
           {isLoading ? 'Creating Session...' : 'Continue'}
         </SubmitButton>
       </form>

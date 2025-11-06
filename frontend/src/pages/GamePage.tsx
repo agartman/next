@@ -33,7 +33,7 @@ const GameControls = styled.div`
 
 const ControlButton = styled.button`
   background-color: ${({ theme }) => theme.colors.secondary};
-  
+
   &:disabled {
     background-color: ${({ theme }) => theme.colors.text.secondary};
   }
@@ -57,13 +57,13 @@ const ColorIndicator = styled.span<{ $color: 'white' | 'black' | null }>`
   border-radius: 4px;
   font-size: ${({ theme }) => theme.typography.fontSize.small};
   background-color: ${({ theme, $color }) =>
-    $color === 'white' ? theme.colors.chess.lightSquare :
-      $color === 'black' ? theme.colors.chess.darkSquare :
-        theme.colors.surface
-  };
+    $color === 'white'
+      ? theme.colors.chess.lightSquare
+      : $color === 'black'
+        ? theme.colors.chess.darkSquare
+        : theme.colors.surface};
   color: ${({ theme, $color }) =>
-    $color === 'black' ? theme.colors.text.inverse : theme.colors.text.primary
-  };
+    $color === 'black' ? theme.colors.text.inverse : theme.colors.text.primary};
 `;
 
 const ConnectionStatus = styled.div<{ $connected: boolean }>`
@@ -71,8 +71,7 @@ const ConnectionStatus = styled.div<{ $connected: boolean }>`
   border-radius: 4px;
   font-size: ${({ theme }) => theme.typography.fontSize.small};
   background-color: ${({ theme, $connected }) =>
-    $connected ? theme.colors.status.success : theme.colors.status.error
-  };
+    $connected ? theme.colors.status.success : theme.colors.status.error};
   color: ${({ theme }) => theme.colors.text.inverse};
   margin-bottom: ${({ theme }) => theme.spacing.sm};
 `;
@@ -132,7 +131,7 @@ export const GamePage: React.FC = () => {
     declineDraw,
     resign,
     clearError,
-    reconnect
+    reconnect,
   } = useGameSync(roomState);
 
   // Connect to socket on mount
@@ -150,14 +149,10 @@ export const GamePage: React.FC = () => {
     }
   }, []);
 
-  const {
-    selectedSquare,
-    validMoves,
-    onSquareSelect
-  } = useChessBoard({
+  const { selectedSquare, validMoves, onSquareSelect } = useChessBoard({
     gameState,
     playerColor,
-    onMove: makeMove
+    onMove: makeMove,
   });
 
   const handleOfferDraw = () => {
@@ -195,31 +190,19 @@ export const GamePage: React.FC = () => {
       {/* Connection Status */}
       <ConnectionStatus $connected={isConnected}>
         {isConnected ? 'Connected' : 'Disconnected'}
-        {!isConnected && (
-          <ReconnectButton onClick={handleReconnect}>
-            Reconnect
-          </ReconnectButton>
-        )}
+        {!isConnected && <ReconnectButton onClick={handleReconnect}>Reconnect</ReconnectButton>}
       </ConnectionStatus>
 
       {/* Error Message */}
-      {error && (
-        <ErrorMessage onClick={handleClearError}>
-          {error} (Click to dismiss)
-        </ErrorMessage>
-      )}
+      {error && <ErrorMessage onClick={handleClearError}>{error} (Click to dismiss)</ErrorMessage>}
 
       {/* Draw Offer Dialog */}
       {drawOffer && (
         <DrawOfferDialog>
           <div>{drawOffer.fromPlayer} has offered a draw</div>
           <DrawOfferButtons>
-            <ControlButton onClick={handleAcceptDraw}>
-              Accept
-            </ControlButton>
-            <ControlButton onClick={handleDeclineDraw}>
-              Decline
-            </ControlButton>
+            <ControlButton onClick={handleAcceptDraw}>Accept</ControlButton>
+            <ControlButton onClick={handleDeclineDraw}>Decline</ControlButton>
           </DrawOfferButtons>
         </DrawOfferDialog>
       )}
@@ -229,9 +212,7 @@ export const GamePage: React.FC = () => {
         <ColorIndicator $color={playerColor}>
           {playerColor ? playerColor.charAt(0).toUpperCase() + playerColor.slice(1) : 'Waiting...'}
         </ColorIndicator>
-        {opponent && (
-          <PlayerName>vs {opponent.nickname}</PlayerName>
-        )}
+        {opponent && <PlayerName>vs {opponent.nickname}</PlayerName>}
         {!isGameActive && opponent && playerColor === 'white' && (
           <PlayerName style={{ color: '#4CAF50', fontWeight: 'bold' }}>
             Ready to start! Click "Start Game" below.
@@ -256,16 +237,15 @@ export const GamePage: React.FC = () => {
 
       <GameControls>
         {!isGameActive && playerColor === 'white' && (
-          <ControlButton
-            onClick={handleStartGame}
-            disabled={!isConnected || !opponent}
-          >
+          <ControlButton onClick={handleStartGame} disabled={!isConnected || !opponent}>
             {opponent ? 'Start Game' : 'Waiting for opponent...'}
           </ControlButton>
         )}
         <ControlButton
           onClick={handleOfferDraw}
-          disabled={!isGameActive || gameState?.isCheckmate || gameState?.isStalemate || !!drawOffer}
+          disabled={
+            !isGameActive || gameState?.isCheckmate || gameState?.isStalemate || !!drawOffer
+          }
         >
           {drawOffer ? 'Draw Offered' : 'Offer Draw'}
         </ControlButton>

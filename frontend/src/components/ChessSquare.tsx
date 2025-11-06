@@ -31,7 +31,7 @@ const SquareContainer = styled.div<SquareStyledProps>`
   align-items: center;
   justify-content: center;
   position: relative;
-  cursor: ${({ $disabled }) => $disabled ? 'not-allowed' : 'pointer'};
+  cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
   background-color: ${({ theme, $isLight, $isSelected, $isValidMove, $isCheck }) => {
     if ($isCheck) return theme.colors.chess.check;
     if ($isSelected) return theme.colors.chess.highlight;
@@ -39,18 +39,21 @@ const SquareContainer = styled.div<SquareStyledProps>`
     return $isLight ? theme.colors.chess.lightSquare : theme.colors.chess.darkSquare;
   }};
   transition: background-color 0.2s ease;
-  opacity: ${({ $disabled }) => $disabled ? 0.6 : 1};
+  opacity: ${({ $disabled }) => ($disabled ? 0.6 : 1)};
 
   &:hover {
-    ${({ $disabled, $isSelected, $isValidMove }) => 
-      !$disabled && !$isSelected && !$isValidMove && `
-        filter: brightness(1.1);
+    ${({ $disabled, $isSelected, $isValidMove }) =>
+      !$disabled &&
+      !$isSelected &&
+      !$isValidMove &&
       `
-    }
+        filter: brightness(1.1);
+      `}
   }
 
-  ${({ $isValidMove }) => 
-    $isValidMove && `
+  ${({ $isValidMove }) =>
+    $isValidMove &&
+    `
       &::after {
         content: '';
         position: absolute;
@@ -60,8 +63,7 @@ const SquareContainer = styled.div<SquareStyledProps>`
         background-color: rgba(0, 0, 0, 0.3);
         pointer-events: none;
       }
-    `
-  }
+    `}
 `;
 
 const PieceSymbol = styled.span`
@@ -69,7 +71,7 @@ const PieceSymbol = styled.span`
   line-height: 1;
   user-select: none;
   pointer-events: none;
-  
+
   @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
     font-size: 2rem;
   }
@@ -82,11 +84,14 @@ const CoordinateLabel = styled.span<{ $position: 'file' | 'rank' }>`
   color: ${({ theme }) => theme.colors.text.secondary};
   user-select: none;
   pointer-events: none;
-  
-  ${({ $position }) => $position === 'file' ? `
+
+  ${({ $position }) =>
+    $position === 'file'
+      ? `
     bottom: 2px;
     right: 2px;
-  ` : `
+  `
+      : `
     top: 2px;
     left: 2px;
   `}
@@ -99,15 +104,15 @@ export const ChessSquare: React.FC<ChessSquareProps> = ({
   isValidMove,
   isCheck,
   onClick,
-  disabled
+  disabled,
 }) => {
   const [rank, file] = squareToIndices(square);
   const isLight = isLightSquare(rank, file);
-  
+
   // Show coordinates on edge squares
   const showFileLabel = rank === 7; // Bottom row
   const showRankLabel = file === 0; // Left column
-  
+
   const handleClick = () => {
     if (!disabled) {
       onClick(square);
@@ -129,18 +134,10 @@ export const ChessSquare: React.FC<ChessSquareProps> = ({
           {getPieceSymbol(piece)}
         </PieceSymbol>
       )}
-      
-      {showFileLabel && (
-        <CoordinateLabel $position="file">
-          {square[0]}
-        </CoordinateLabel>
-      )}
-      
-      {showRankLabel && (
-        <CoordinateLabel $position="rank">
-          {square[1]}
-        </CoordinateLabel>
-      )}
+
+      {showFileLabel && <CoordinateLabel $position="file">{square[0]}</CoordinateLabel>}
+
+      {showRankLabel && <CoordinateLabel $position="rank">{square[1]}</CoordinateLabel>}
     </SquareContainer>
   );
 };

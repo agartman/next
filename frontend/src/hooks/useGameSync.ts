@@ -16,7 +16,7 @@ import {
   DrawDeclinedResponse,
   PlayerResignedResponse,
   PlayerLeftResponse,
-  ErrorResponse
+  ErrorResponse,
 } from '../types/websocket';
 
 interface GameSyncState {
@@ -42,12 +42,14 @@ interface UseGameSyncReturn extends GameSyncState {
   reconnect: () => Promise<void>;
 }
 
-export const useGameSync = (initialRoomState?: {
-  roomId: string;
-  playerColor: 'white' | 'black';
-  nickname: string;
-  sessionId: string;
-} | null): UseGameSyncReturn => {
+export const useGameSync = (
+  initialRoomState?: {
+    roomId: string;
+    playerColor: 'white' | 'black';
+    nickname: string;
+    sessionId: string;
+  } | null
+): UseGameSyncReturn => {
   const [state, setState] = useState<GameSyncState>({
     gameState: null,
     playerColor: initialRoomState?.playerColor || null,
@@ -57,7 +59,7 @@ export const useGameSync = (initialRoomState?: {
     isGameActive: false,
     isRoomReady: false,
     error: null,
-    drawOffer: null
+    drawOffer: null,
   });
 
   const eventListenersSetup = useRef(false);
@@ -77,7 +79,7 @@ export const useGameSync = (initialRoomState?: {
         isRoomReady: data.isRoomReady,
         isGameActive: data.isGameActive,
         gameState: data.gameState || null,
-        error: null
+        error: null,
       }));
     });
 
@@ -90,7 +92,7 @@ export const useGameSync = (initialRoomState?: {
         opponent: data.opponent,
         isGameActive: true,
         isRoomReady: false,
-        error: null
+        error: null,
       }));
     });
 
@@ -101,7 +103,7 @@ export const useGameSync = (initialRoomState?: {
         opponent: data.opponent,
         isRoomReady: true,
         isGameActive: false, // Game is not active until manually started
-        error: null
+        error: null,
       }));
     });
 
@@ -110,7 +112,7 @@ export const useGameSync = (initialRoomState?: {
       setState(prev => ({
         ...prev,
         gameState: data.gameState,
-        error: null
+        error: null,
       }));
     });
 
@@ -121,7 +123,7 @@ export const useGameSync = (initialRoomState?: {
         gameState: data.gameState,
         isGameActive: false,
         drawOffer: null,
-        error: null
+        error: null,
       }));
     });
 
@@ -131,9 +133,9 @@ export const useGameSync = (initialRoomState?: {
         ...prev,
         drawOffer: {
           fromPlayer: data.fromPlayer.nickname,
-          color: data.fromPlayer.color
+          color: data.fromPlayer.color,
         },
-        error: null
+        error: null,
       }));
     });
 
@@ -144,7 +146,7 @@ export const useGameSync = (initialRoomState?: {
         gameState: data.gameState,
         isGameActive: false,
         drawOffer: null,
-        error: null
+        error: null,
       }));
     });
 
@@ -153,7 +155,7 @@ export const useGameSync = (initialRoomState?: {
       setState(prev => ({
         ...prev,
         drawOffer: null,
-        error: null
+        error: null,
       }));
     });
 
@@ -164,7 +166,7 @@ export const useGameSync = (initialRoomState?: {
         gameState: data.gameState,
         isGameActive: false,
         drawOffer: null,
-        error: null
+        error: null,
       }));
     });
 
@@ -173,7 +175,7 @@ export const useGameSync = (initialRoomState?: {
       setState(prev => ({
         ...prev,
         isGameActive: false,
-        error: `${data.leftPlayer.nickname} left the game`
+        error: `${data.leftPlayer.nickname} left the game`,
       }));
     });
 
@@ -181,7 +183,7 @@ export const useGameSync = (initialRoomState?: {
     socketService.onError((data: ErrorResponse) => {
       setState(prev => ({
         ...prev,
-        error: data.message
+        error: data.message,
       }));
     });
   }, []);
@@ -192,7 +194,7 @@ export const useGameSync = (initialRoomState?: {
       const isConnected = socketService.isConnected();
       setState(prev => ({
         ...prev,
-        isConnected
+        isConnected,
       }));
     };
 
@@ -217,7 +219,7 @@ export const useGameSync = (initialRoomState?: {
     if (state.playerColor && state.opponent && !state.isGameActive && !state.isRoomReady) {
       setState(prev => ({
         ...prev,
-        isRoomReady: true
+        isRoomReady: true,
       }));
     }
   }, [state.playerColor, state.opponent, state.isGameActive, state.isRoomReady]);
@@ -252,7 +254,7 @@ export const useGameSync = (initialRoomState?: {
     if (!state.isConnected) {
       setState(prev => ({
         ...prev,
-        error: 'Cannot start game: not connected'
+        error: 'Cannot start game: not connected',
       }));
       return;
     }
@@ -260,7 +262,7 @@ export const useGameSync = (initialRoomState?: {
     if (state.playerColor !== 'white') {
       setState(prev => ({
         ...prev,
-        error: 'Only white player can start the game'
+        error: 'Only white player can start the game',
       }));
       return;
     }
@@ -268,7 +270,7 @@ export const useGameSync = (initialRoomState?: {
     if (state.isGameActive) {
       setState(prev => ({
         ...prev,
-        error: 'Game is already active'
+        error: 'Game is already active',
       }));
       return;
     }
@@ -276,31 +278,34 @@ export const useGameSync = (initialRoomState?: {
     socketService.startGame();
   }, [state.isConnected, state.playerColor, state.isGameActive]);
 
-  const makeMove = useCallback((move: ChessMove) => {
-    if (!state.isConnected || !state.isGameActive) {
-      setState(prev => ({
-        ...prev,
-        error: 'Cannot make move: not connected or game not active'
-      }));
-      return;
-    }
+  const makeMove = useCallback(
+    (move: ChessMove) => {
+      if (!state.isConnected || !state.isGameActive) {
+        setState(prev => ({
+          ...prev,
+          error: 'Cannot make move: not connected or game not active',
+        }));
+        return;
+      }
 
-    if (state.gameState?.turn !== state.playerColor) {
-      setState(prev => ({
-        ...prev,
-        error: 'Not your turn'
-      }));
-      return;
-    }
+      if (state.gameState?.turn !== state.playerColor) {
+        setState(prev => ({
+          ...prev,
+          error: 'Not your turn',
+        }));
+        return;
+      }
 
-    socketService.makeMove(move);
-  }, [state.isConnected, state.isGameActive, state.gameState?.turn, state.playerColor]);
+      socketService.makeMove(move);
+    },
+    [state.isConnected, state.isGameActive, state.gameState?.turn, state.playerColor]
+  );
 
   const offerDraw = useCallback(() => {
     if (!state.isConnected || !state.isGameActive) {
       setState(prev => ({
         ...prev,
-        error: 'Cannot offer draw: not connected or game not active'
+        error: 'Cannot offer draw: not connected or game not active',
       }));
       return;
     }
@@ -312,7 +317,7 @@ export const useGameSync = (initialRoomState?: {
     if (!state.isConnected || !state.drawOffer) {
       setState(prev => ({
         ...prev,
-        error: 'Cannot accept draw: no draw offer available'
+        error: 'Cannot accept draw: no draw offer available',
       }));
       return;
     }
@@ -324,7 +329,7 @@ export const useGameSync = (initialRoomState?: {
     if (!state.isConnected || !state.drawOffer) {
       setState(prev => ({
         ...prev,
-        error: 'Cannot decline draw: no draw offer available'
+        error: 'Cannot decline draw: no draw offer available',
       }));
       return;
     }
@@ -336,7 +341,7 @@ export const useGameSync = (initialRoomState?: {
     if (!state.isConnected || !state.isGameActive) {
       setState(prev => ({
         ...prev,
-        error: 'Cannot resign: not connected or game not active'
+        error: 'Cannot resign: not connected or game not active',
       }));
       return;
     }
@@ -347,7 +352,7 @@ export const useGameSync = (initialRoomState?: {
   const clearError = useCallback(() => {
     setState(prev => ({
       ...prev,
-      error: null
+      error: null,
     }));
   }, []);
 
@@ -357,12 +362,12 @@ export const useGameSync = (initialRoomState?: {
       setupEventListeners();
       setState(prev => ({
         ...prev,
-        error: null
+        error: null,
       }));
     } catch (error) {
       setState(prev => ({
         ...prev,
-        error: 'Failed to reconnect to server'
+        error: 'Failed to reconnect to server',
       }));
     }
   }, [setupEventListeners]);
@@ -386,6 +391,6 @@ export const useGameSync = (initialRoomState?: {
     declineDraw,
     resign,
     clearError,
-    reconnect
+    reconnect,
   };
 };
