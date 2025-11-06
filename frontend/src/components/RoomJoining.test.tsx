@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from 'styled-components';
 import { vi } from 'vitest';
@@ -53,24 +53,28 @@ describe('RoomJoining', () => {
     const passwordInput = screen.getByLabelText(/room password/i);
     const submitButton = screen.getByTestId('join-room-submit');
 
-    // Test empty fields
-    await user.click(submitButton);
-    expect(screen.getByText(/room id is required/i)).toBeInTheDocument();
-    expect(screen.getByText(/room password is required/i)).toBeInTheDocument();
-    expect(mockOnJoinRoom).not.toHaveBeenCalled();
+    // Test empty fields - button should be disabled
+    expect(submitButton).toBeDisabled();
 
-    // Test room ID too short
+    // Test room ID too short - need both fields filled to enable button
     await user.type(roomIdInput, 'ab');
+    await user.type(passwordInput, 'validPassword');
+    expect(submitButton).not.toBeDisabled();
     await user.click(submitButton);
-    expect(screen.getByText(/room id must be at least 3 characters long/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/room id must be at least 3 characters long/i)).toBeInTheDocument();
+    });
     expect(mockOnJoinRoom).not.toHaveBeenCalled();
 
     // Test password too short
     await user.clear(roomIdInput);
+    await user.clear(passwordInput); // Clear the password field first
     await user.type(roomIdInput, 'validRoomId');
     await user.type(passwordInput, 'abc');
     await user.click(submitButton);
-    expect(screen.getByText(/password must be at least 4 characters long/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/password must be at least 4 characters long/i)).toBeInTheDocument();
+    });
     expect(mockOnJoinRoom).not.toHaveBeenCalled();
   });
 
@@ -122,10 +126,15 @@ describe('RoomJoining', () => {
     const passwordInput = screen.getByLabelText(/room password/i);
     const submitButton = screen.getByTestId('join-room-submit');
 
-    // Trigger validation errors
+    // Type short values to enable button, then trigger validation errors
+    await user.type(roomIdInput, 'ab');
+    await user.type(passwordInput, 'abc');
+    expect(submitButton).not.toBeDisabled();
     await user.click(submitButton);
-    expect(screen.getByText(/room id is required/i)).toBeInTheDocument();
-    expect(screen.getByText(/room password is required/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/room id must be at least 3 characters long/i)).toBeInTheDocument();
+      expect(screen.getByText(/password must be at least 4 characters long/i)).toBeInTheDocument();
+    });
 
     // Start typing to clear errors
     await user.type(roomIdInput, 'a');

@@ -25,7 +25,9 @@ const Label = styled.label`
   color: ${({ theme }) => theme.colors.text.primary};
 `;
 
-const Input = styled.input<{ hasError?: boolean }>`
+const Input = styled.input.withConfig({
+  shouldForwardProp: (prop) => prop !== 'hasError',
+}) <{ hasError?: boolean }>`
   padding: ${({ theme }) => theme.spacing.md};
   border: 2px solid
     ${({ theme, hasError }) => (hasError ? theme.colors.status.error : theme.colors.text.secondary)};
@@ -38,7 +40,7 @@ const Input = styled.input<{ hasError?: boolean }>`
   &:focus {
     outline: none;
     border-color: ${({ theme, hasError }) =>
-      hasError ? theme.colors.status.error : theme.colors.primary};
+    hasError ? theme.colors.status.error : theme.colors.primary};
   }
 
   &::placeholder {
