@@ -51,7 +51,7 @@ export interface ChessBoardProps {
   gameState: ChessGameState | null;
   playerColor: 'white' | 'black' | null;
   onMove: (move: ChessMove) => void;
-  selectedSquare: string | null;
+  selectedSquare: string;
   onSquareSelect: (square: string) => void;
   validMoves: string[];
   disabled: boolean;

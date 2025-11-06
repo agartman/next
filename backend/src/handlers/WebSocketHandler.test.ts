@@ -10,11 +10,11 @@ import { SessionManager } from '../managers/SessionManager';
 import { RoomManager } from '../managers/RoomManager';
 import { ChessGameEngine } from '../managers/ChessGameEngine';
 import { WebSocketHandler } from './WebSocketHandler';
-import { 
-    ClientToServerEvents, 
-    ServerToClientEvents, 
-    InterServerEvents, 
-    SocketData 
+import {
+    ClientToServerEvents,
+    ServerToClientEvents,
+    InterServerEvents,
+    SocketData
 } from '../types/websocket';
 
 describe('WebSocketHandler', () => {
@@ -30,12 +30,12 @@ describe('WebSocketHandler', () => {
         // Create HTTP server and Socket.io server
         httpServer = createServer();
         io = new Server(httpServer);
-        
+
         // Initialize managers
         sessionManager = new SessionManager();
         roomManager = new RoomManager();
         gameEngine = new ChessGameEngine();
-        
+
         // Initialize WebSocket handler
         new WebSocketHandler(io, sessionManager, roomManager, gameEngine);
 
@@ -111,7 +111,7 @@ describe('WebSocketHandler', () => {
     describe('Room Management', () => {
         beforeEach(async () => {
             clientSocket = await connectClient();
-            
+
             // Create session first
             const sessionPromise = new Promise((resolve) => {
                 clientSocket.on('session-created', resolve);
@@ -154,7 +154,7 @@ describe('WebSocketHandler', () => {
 
             // Connect second client
             const client2 = await connectClient();
-            
+
             // Create session for second client
             const session2Promise = new Promise((resolve) => {
                 client2.on('session-created', resolve);
@@ -166,9 +166,9 @@ describe('WebSocketHandler', () => {
             const joinPromise = new Promise((resolve) => {
                 client2.on('room-joined', resolve);
             });
-            client2.emit('join-room', { 
-                roomId: roomResponse.roomId, 
-                password: 'testpass' 
+            client2.emit('join-room', {
+                roomId: roomResponse.roomId,
+                password: 'testpass'
             });
 
             const joinResponse: any = await joinPromise;
@@ -188,7 +188,7 @@ describe('WebSocketHandler', () => {
 
             // Connect second client
             const client2 = await connectClient();
-            
+
             // Create session for second client
             const session2Promise = new Promise((resolve) => {
                 client2.on('session-created', resolve);
@@ -200,9 +200,9 @@ describe('WebSocketHandler', () => {
             const errorPromise = new Promise((resolve) => {
                 client2.on('error', resolve);
             });
-            client2.emit('join-room', { 
-                roomId: roomResponse.roomId, 
-                password: 'wrongpass' 
+            client2.emit('join-room', {
+                roomId: roomResponse.roomId,
+                password: 'wrongpass'
             });
 
             const errorResponse: any = await errorPromise;
@@ -215,6 +215,7 @@ describe('WebSocketHandler', () => {
     describe('Game Flow', () => {
         let client2: ClientSocket;
         let roomId: string;
+        let gameStartResponse: any;
 
         beforeEach(async () => {
             // Setup two clients with sessions and a room
@@ -242,12 +243,20 @@ describe('WebSocketHandler', () => {
             const roomResponse: any = await roomPromise;
             roomId = roomResponse.roomId;
 
+            // Set up game-started listener before joining room
+            const gameStartPromise = new Promise((resolve) => {
+                clientSocket.on('game-started', resolve);
+            });
+
             // Join room
             const joinPromise = new Promise((resolve) => {
                 client2.on('room-joined', resolve);
             });
             client2.emit('join-room', { roomId, password: 'testpass' });
             await joinPromise;
+
+            // Wait for game to start
+            gameStartResponse = await gameStartPromise;
         });
 
         afterEach(() => {
@@ -257,22 +266,13 @@ describe('WebSocketHandler', () => {
         });
 
         test('should start game when room is full', async () => {
-            const gameStartPromise = new Promise((resolve) => {
-                clientSocket.on('game-started', resolve);
-            });
-
-            const gameStartResponse: any = await gameStartPromise;
+            // Game should already be started from beforeEach
             expect(gameStartResponse.gameState).toBeDefined();
             expect(gameStartResponse.gameState.turn).toBe('white');
             expect(gameStartResponse.opponent.nickname).toBe('Player2');
         });
 
         test('should handle valid chess moves', async () => {
-            // Wait for game to start
-            await new Promise((resolve) => {
-                clientSocket.on('game-started', resolve);
-            });
-
             const movePromise = new Promise((resolve) => {
                 client2.on('move-made', resolve);
             });
@@ -289,11 +289,6 @@ describe('WebSocketHandler', () => {
         });
 
         test('should reject invalid moves', async () => {
-            // Wait for game to start
-            await new Promise((resolve) => {
-                clientSocket.on('game-started', resolve);
-            });
-
             const errorPromise = new Promise((resolve) => {
                 clientSocket.on('error', resolve);
             });
@@ -308,11 +303,6 @@ describe('WebSocketHandler', () => {
         });
 
         test('should handle draw offers', async () => {
-            // Wait for game to start
-            await new Promise((resolve) => {
-                clientSocket.on('game-started', resolve);
-            });
-
             const drawOfferPromise = new Promise((resolve) => {
                 client2.on('draw-offered', resolve);
             });
@@ -325,11 +315,6 @@ describe('WebSocketHandler', () => {
         });
 
         test('should handle resignation', async () => {
-            // Wait for game to start
-            await new Promise((resolve) => {
-                clientSocket.on('game-started', resolve);
-            });
-
             const resignPromise = new Promise((resolve) => {
                 client2.on('player-resigned', resolve);
             });
@@ -359,7 +344,7 @@ describe('WebSocketHandler', () => {
 
         test('should handle moves when not in game', async () => {
             clientSocket = await connectClient();
-            
+
             // Create session but no room
             const sessionPromise = new Promise((resolve) => {
                 clientSocket.on('session-created', resolve);

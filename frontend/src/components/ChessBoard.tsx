@@ -2,7 +2,7 @@
  * Interactive chess board component
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import styled from 'styled-components';
 import { ChessSquare } from './ChessSquare';
 import { ChessBoardProps } from '../types/game';
@@ -161,6 +161,13 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       }
     }
   }, [disabled, isMyTurn, selectedSquare, validMoves, boardPosition, playerColor, onMove, onSquareSelect]);
+
+  // Clear pending move when game state updates (move was processed)
+  useEffect(() => {
+    if (pendingMove && gameState) {
+      setPendingMove(null);
+    }
+  }, [gameState, pendingMove]);
 
   // Get status message
   const getStatusMessage = (): { type: 'check' | 'checkmate' | 'stalemate' | 'draw' | 'normal'; text: string } => {

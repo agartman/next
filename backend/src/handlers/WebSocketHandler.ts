@@ -3,10 +3,10 @@
  */
 
 import { Server, Socket } from 'socket.io';
-import { 
-    ClientToServerEvents, 
-    ServerToClientEvents, 
-    InterServerEvents, 
+import {
+    ClientToServerEvents,
+    ServerToClientEvents,
+    InterServerEvents,
     SocketData,
     ErrorResponse
 } from '../types/websocket';
@@ -86,7 +86,7 @@ export class WebSocketHandler {
     private handleCreateSession(socket: TypedSocket, data: { nickname: string }): void {
         try {
             // Validate input
-            if (!data.nickname || typeof data.nickname !== 'string') {
+            if (data.nickname === null || data.nickname === undefined || typeof data.nickname !== 'string') {
                 this.sendError(socket, 'VALIDATION_ERROR', 'Nickname is required');
                 return;
             }
@@ -110,8 +110,8 @@ export class WebSocketHandler {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to create session';
             // Check if it's a validation error from SessionManager
-            const errorCode = errorMessage.includes('empty') || errorMessage.includes('characters') || 
-                            errorMessage.includes('required') ? 'INVALID_NICKNAME' : 'VALIDATION_ERROR';
+            const errorCode = errorMessage.includes('empty') || errorMessage.includes('characters') ||
+                errorMessage.includes('long') || errorMessage.includes('contain') || errorMessage.includes('least') ? 'INVALID_NICKNAME' : 'VALIDATION_ERROR';
             this.sendError(socket, errorCode, errorMessage);
         }
     }
@@ -125,7 +125,7 @@ export class WebSocketHandler {
             }
 
             // Validate input
-            if (!data.password || typeof data.password !== 'string') {
+            if (data.password === null || data.password === undefined || typeof data.password !== 'string') {
                 this.sendError(socket, 'VALIDATION_ERROR', 'Password is required');
                 return;
             }
@@ -152,8 +152,8 @@ export class WebSocketHandler {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to create room';
             // Check if it's a validation error from RoomManager
-            const errorCode = errorMessage.includes('empty') || errorMessage.includes('characters') || 
-                            errorMessage.includes('required') ? 'INVALID_PASSWORD' : 'VALIDATION_ERROR';
+            const errorCode = errorMessage.includes('empty') || errorMessage.includes('characters') ||
+                errorMessage.includes('long') || errorMessage.includes('least') ? 'INVALID_PASSWORD' : 'VALIDATION_ERROR';
             this.sendError(socket, errorCode, errorMessage);
         }
     }
@@ -180,8 +180,8 @@ export class WebSocketHandler {
 
             if (!joinResult.success) {
                 const errorCode = joinResult.error === 'Room not found' ? 'ROOM_NOT_FOUND' :
-                                joinResult.error === 'Incorrect password' ? 'WRONG_PASSWORD' :
-                                joinResult.error === 'Room is full' ? 'ROOM_FULL' : 'VALIDATION_ERROR';
+                    joinResult.error === 'Incorrect password' ? 'WRONG_PASSWORD' :
+                        joinResult.error === 'Room is full' ? 'ROOM_FULL' : 'VALIDATION_ERROR';
                 this.sendError(socket, errorCode, joinResult.error || 'Failed to join room');
                 return;
             }
@@ -213,18 +213,18 @@ export class WebSocketHandler {
             if (room.players.length === 2 && !room.gameState) {
                 const whitePlayer = room.players.find(p => p.color === 'white');
                 const blackPlayer = room.players.find(p => p.color === 'black');
-                
+
                 if (whitePlayer && blackPlayer) {
                     this.gameEngine.initializeGame(data.roomId, whitePlayer.sessionId, blackPlayer.sessionId);
                     const gameState = this.gameEngine.getGameState(data.roomId);
-                    
+
                     if (gameState) {
                         room.gameState = gameState;
-                        
+
                         // Get both player sessions for proper opponent info
                         const whiteSession = this.sessionManager.getSessionById(whitePlayer.sessionId);
                         const blackSession = this.sessionManager.getSessionById(blackPlayer.sessionId);
-                        
+
                         if (whiteSession && blackSession) {
                             // Notify white player
                             this.io.to(whiteSession.socketId).emit('game-started', {
@@ -232,7 +232,7 @@ export class WebSocketHandler {
                                 playerColor: 'white',
                                 opponent: { nickname: blackSession.nickname }
                             });
-                            
+
                             // Notify black player
                             this.io.to(blackSession.socketId).emit('game-started', {
                                 gameState,
@@ -528,7 +528,7 @@ export class WebSocketHandler {
 
                 // Remove player from room
                 this.roomManager.leaveRoom(session.id);
-                
+
                 // Clean up game if it exists
                 this.gameEngine.cleanupGame(session.currentRoom);
             }

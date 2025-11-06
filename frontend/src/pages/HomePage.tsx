@@ -3,6 +3,7 @@
  */
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { RoomInterface } from '../components/RoomInterface';
 
@@ -42,15 +43,14 @@ interface GameData {
 
 export const HomePage: React.FC = () => {
   const [gameData, setGameData] = useState<GameData | null>(null);
+  const navigate = useNavigate();
 
   const handleGameReady = (data: GameData) => {
     setGameData(data);
-    // In a real app, this would navigate to the game page
-    // For now, we'll just store the game data
     console.log('Game ready with data:', data);
-    
-    // TODO: Navigate to game page or emit game start event
-    // This will be implemented in future tasks
+
+    // Navigate to the game page
+    navigate('/game');
   };
 
   return (
@@ -61,7 +61,7 @@ export const HomePage: React.FC = () => {
           Play chess with friends in real-time. Create or join a room to get started.
         </WelcomeText>
       </WelcomeHeader>
-      
+
       {!gameData ? (
         <RoomInterface onGameReady={handleGameReady} />
       ) : (

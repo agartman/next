@@ -2,11 +2,12 @@
  * Game page component for chess gameplay
  */
 
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { ChessBoard } from '../components/ChessBoard';
 import { useChessBoard } from '../hooks/useChessBoard';
-import { ChessGameState, ChessMove } from '../types/websocket';
+import { useGameSync } from '../hooks/useGameSync';
+import { socketService } from '../services/socketService';
 
 const GameContainer = styled.div`
   display: flex;
@@ -64,58 +65,155 @@ const ColorIndicator = styled.span<{ $color: 'white' | 'black' | null }>`
   };
 `;
 
-export const GamePage: React.FC = () => {
-  // Mock game state for demonstration - in real app this would come from WebSocket
-  const [gameState] = useState<ChessGameState>({
-    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-    turn: 'white',
-    moveHistory: [],
-    isCheck: false,
-    isCheckmate: false,
-    isStalemate: false,
-    drawOffered: false
-  });
-
-  // Mock player color - in real app this would come from room state
-  const [playerColor] = useState<'white' | 'black'>('white');
-  
-  // Mock opponent info
-  const opponent = { nickname: 'Opponent' };
-
-  const handleMove = (move: ChessMove) => {
-    console.log('Move made:', move);
-    // In real app, this would send the move via WebSocket
+const ConnectionStatus = styled.div<{ $connected: boolean }>`
+  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
+  border-radius: 4px;
+  font-size: ${({ theme }) => theme.typography.fontSize.small};
+  background-color: ${({ theme, $connected }) => 
+    $connected ? theme.colors.status.success : theme.colors.status.error
   };
+  color: ${({ theme }) => theme.colors.text.inverse};
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
+`;
+
+const ErrorMessage = styled.div`
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  border-radius: 4px;
+  background-color: ${({ theme }) => theme.colors.status.error};
+  color: ${({ theme }) => theme.colors.text.inverse};
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
+  text-align: center;
+`;
+
+const DrawOfferDialog = styled.div`
+  padding: ${({ theme }) => theme.spacing.md};
+  border-radius: 8px;
+  background-color: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.status.info};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+  text-align: center;
+`;
+
+const DrawOfferButtons = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.sm};
+  justify-content: center;
+  margin-top: ${({ theme }) => theme.spacing.sm};
+`;
+
+const ReconnectButton = styled.button`
+  background-color: ${({ theme }) => theme.colors.status.warning};
+  margin-left: ${({ theme }) => theme.spacing.sm};
+`;
+
+export const GamePage: React.FC = () => {
+  // Use real-time game synchronization
+  const {
+    gameState,
+    playerColor,
+    opponent,
+    isConnected,
+    isGameActive,
+    error,
+    drawOffer,
+    makeMove,
+    offerDraw,
+    acceptDraw,
+    declineDraw,
+    resign,
+    clearError,
+    reconnect
+  } = useGameSync();
+
+  // Connect to socket on mount
+  useEffect(() => {
+    const connectSocket = async () => {
+      try {
+        await socketService.connect();
+      } catch (error) {
+        console.error('Failed to connect to server:', error);
+      }
+    };
+
+    if (!socketService.isConnected()) {
+      connectSocket();
+    }
+  }, []);
 
   const {
     selectedSquare,
     validMoves,
-    onSquareSelect,
-    clearSelection
+    onSquareSelect
   } = useChessBoard({
     gameState,
     playerColor,
-    onMove: handleMove
+    onMove: makeMove
   });
 
   const handleOfferDraw = () => {
-    console.log('Draw offered');
-    // In real app, this would send draw offer via WebSocket
+    offerDraw();
   };
 
   const handleResign = () => {
-    console.log('Player resigned');
-    // In real app, this would send resignation via WebSocket
+    resign();
+  };
+
+  const handleAcceptDraw = () => {
+    acceptDraw();
+  };
+
+  const handleDeclineDraw = () => {
+    declineDraw();
+  };
+
+  const handleReconnect = async () => {
+    await reconnect();
+  };
+
+  const handleClearError = () => {
+    clearError();
   };
 
   return (
     <GameContainer>
       <GameTitle>Chess Game</GameTitle>
       
+      {/* Connection Status */}
+      <ConnectionStatus $connected={isConnected}>
+        {isConnected ? 'Connected' : 'Disconnected'}
+        {!isConnected && (
+          <ReconnectButton onClick={handleReconnect}>
+            Reconnect
+          </ReconnectButton>
+        )}
+      </ConnectionStatus>
+
+      {/* Error Message */}
+      {error && (
+        <ErrorMessage onClick={handleClearError}>
+          {error} (Click to dismiss)
+        </ErrorMessage>
+      )}
+
+      {/* Draw Offer Dialog */}
+      {drawOffer && (
+        <DrawOfferDialog>
+          <div>{drawOffer.fromPlayer} has offered a draw</div>
+          <DrawOfferButtons>
+            <ControlButton onClick={handleAcceptDraw}>
+              Accept
+            </ControlButton>
+            <ControlButton onClick={handleDeclineDraw}>
+              Decline
+            </ControlButton>
+          </DrawOfferButtons>
+        </DrawOfferDialog>
+      )}
+      
       <PlayerInfo>
         <PlayerName>You are playing as:</PlayerName>
         <ColorIndicator $color={playerColor}>
-          {playerColor ? playerColor.charAt(0).toUpperCase() + playerColor.slice(1) : 'Spectator'}
+          {playerColor ? playerColor.charAt(0).toUpperCase() + playerColor.slice(1) : 'Waiting...'}
         </ColorIndicator>
         {opponent && (
           <PlayerName>vs {opponent.nickname}</PlayerName>
@@ -125,23 +223,23 @@ export const GamePage: React.FC = () => {
       <ChessBoard
         gameState={gameState}
         playerColor={playerColor}
-        onMove={handleMove}
+        onMove={makeMove}
         selectedSquare={selectedSquare}
         onSquareSelect={onSquareSelect}
         validMoves={validMoves}
-        disabled={false}
+        disabled={!isConnected || !isGameActive}
       />
 
       <GameControls>
         <ControlButton 
           onClick={handleOfferDraw}
-          disabled={gameState.isCheckmate || gameState.isStalemate}
+          disabled={!isGameActive || gameState?.isCheckmate || gameState?.isStalemate || !!drawOffer}
         >
-          Offer Draw
+          {drawOffer ? 'Draw Offered' : 'Offer Draw'}
         </ControlButton>
         <ControlButton 
           onClick={handleResign}
-          disabled={gameState.isCheckmate || gameState.isStalemate}
+          disabled={!isGameActive || gameState?.isCheckmate || gameState?.isStalemate}
         >
           Resign
         </ControlButton>

@@ -10,8 +10,7 @@ import {
   squareToIndices,
   indicesToSquare,
   isLightSquare,
-  getAllSquares,
-  type ChessPiece
+  getAllSquares
 } from '../chessUtils';
 
 describe('chessUtils', () => {

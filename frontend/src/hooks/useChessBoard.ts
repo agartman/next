@@ -75,8 +75,20 @@ export const useChessBoard = ({
   }, [selectedSquare, gameState, playerColor, boardPosition]);
 
   const onSquareSelect = useCallback((square: string) => {
-    setSelectedSquare(square);
-  }, []);
+    if (selectedSquare && validMoves.includes(square) && onMove) {
+      // Execute the move
+      const move: ChessMove = {
+        from: selectedSquare,
+        to: square,
+        piece: '', // Will be filled by the server
+        timestamp: Date.now()
+      };
+      onMove(move);
+      setSelectedSquare('');
+    } else {
+      setSelectedSquare(square);
+    }
+  }, [selectedSquare, validMoves, onMove]);
 
   const clearSelection = useCallback(() => {
     setSelectedSquare('');
