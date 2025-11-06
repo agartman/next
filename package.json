@@ -1,36 +1,37 @@
 {
-    "name": "chess-multiplayer-website",
-    "version": "1.0.0",
-    "description": "A multiplayer chess website with React frontend and Node.js backend",
-    "scripts": {
-        "install:frontend": "cd frontend && npm install",
-        "install:backend": "cd backend && npm install",
-        "install:all": "npm run install:frontend && npm run install:backend",
-        "dev:frontend": "cd frontend && npm run dev",
-        "dev:backend": "cd backend && npm run dev",
-        "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-        "build:frontend": "cd frontend && npm run build",
-        "build:backend": "cd backend && npm run build",
-        "build": "npm run build:backend && npm run build:frontend",
-        "start": "cd backend && npm start",
-        "lint:frontend": "cd frontend && npm run lint",
-        "lint:backend": "cd backend && npm run lint",
-        "lint": "npm run lint:backend && npm run lint:frontend",
-        "test:backend": "cd backend && npm test",
-        "test:frontend": "cd frontend && npm test",
-        "test": "npm run test:backend && npm run test:frontend"
-    },
-    "devDependencies": {
-        "concurrently": "^9.0.1"
-    },
-    "keywords": [
-        "chess",
-        "multiplayer",
-        "react",
-        "nodejs",
-        "websocket",
-        "typescript"
-    ],
-    "author": "",
-    "license": "MIT"
+  "name": "chess-multiplayer-website",
+  "version": "1.0.0",
+  "description": "A multiplayer chess website with React frontend and Node.js backend",
+  "scripts": {
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && npm install",
+    "install:all": "npm run install:frontend && npm run install:backend",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "start": "cd backend && npm start",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "test": "npm run test:backend && npm run test:frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "prettier": "^3.6.2"
+  },
+  "keywords": [
+    "chess",
+    "multiplayer",
+    "react",
+    "nodejs",
+    "websocket",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT"
 }

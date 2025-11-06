@@ -22,7 +22,7 @@ interface UseChessBoardReturn {
 export const useChessBoard = ({
   gameState,
   playerColor,
-  onMove
+  onMove,
 }: UseChessBoardProps): UseChessBoardReturn => {
   const [selectedSquare, setSelectedSquare] = useState<string>('');
 
@@ -38,16 +38,16 @@ export const useChessBoard = ({
   // Calculate valid moves for selected piece
   const validMoves = useMemo(() => {
     if (!selectedSquare || !gameState || !playerColor) return [];
-    
+
     const [rank, file] = squareToIndices(selectedSquare);
     const selectedPiece = boardPosition[rank][file];
-    
+
     if (!selectedPiece || selectedPiece.color !== playerColor) return [];
-    
+
     // Basic move validation - this is a simplified version
     // In a real implementation, you'd use a chess library like chess.js
     const moves: string[] = [];
-    
+
     // For now, return basic moves based on piece type
     // This is a placeholder - real chess move generation is complex
     switch (selectedPiece.type) {
@@ -70,25 +70,28 @@ export const useChessBoard = ({
         moves.push(...getKingMoves(rank, file, selectedPiece.color, boardPosition));
         break;
     }
-    
+
     return moves.filter(move => isValidSquare(move));
   }, [selectedSquare, gameState, playerColor, boardPosition]);
 
-  const onSquareSelect = useCallback((square: string) => {
-    if (selectedSquare && validMoves.includes(square) && onMove) {
-      // Execute the move
-      const move: ChessMove = {
-        from: selectedSquare,
-        to: square,
-        piece: '', // Will be filled by the server
-        timestamp: Date.now()
-      };
-      onMove(move);
-      setSelectedSquare('');
-    } else {
-      setSelectedSquare(square);
-    }
-  }, [selectedSquare, validMoves, onMove]);
+  const onSquareSelect = useCallback(
+    (square: string) => {
+      if (selectedSquare && validMoves.includes(square) && onMove) {
+        // Execute the move
+        const move: ChessMove = {
+          from: selectedSquare,
+          to: square,
+          piece: '', // Will be filled by the server
+          timestamp: Date.now(),
+        };
+        onMove(move);
+        setSelectedSquare('');
+      } else {
+        setSelectedSquare(square);
+      }
+    },
+    [selectedSquare, validMoves, onMove]
+  );
 
   const clearSelection = useCallback(() => {
     setSelectedSquare('');
@@ -98,7 +101,7 @@ export const useChessBoard = ({
     selectedSquare,
     validMoves,
     onSquareSelect,
-    clearSelection
+    clearSelection,
   };
 };
 
@@ -106,9 +109,13 @@ export const useChessBoard = ({
 // Note: These are simplified and don't handle all chess rules
 
 const isValidSquare = (square: string): boolean => {
-  return square.length === 2 && 
-         square[0] >= 'a' && square[0] <= 'h' &&
-         square[1] >= '1' && square[1] <= '8';
+  return (
+    square.length === 2 &&
+    square[0] >= 'a' &&
+    square[0] <= 'h' &&
+    square[1] >= '1' &&
+    square[1] <= '8'
+  );
 };
 
 const indicesToSquare = (rank: number, file: number): string => {
@@ -121,27 +128,37 @@ const isSquareEmpty = (rank: number, file: number, board: any[][]): boolean => {
   return rank >= 0 && rank < 8 && file >= 0 && file < 8 && board[rank][file] === null;
 };
 
-const isEnemyPiece = (rank: number, file: number, color: 'white' | 'black', board: any[][]): boolean => {
+const isEnemyPiece = (
+  rank: number,
+  file: number,
+  color: 'white' | 'black',
+  board: any[][]
+): boolean => {
   if (rank < 0 || rank >= 8 || file < 0 || file >= 8) return false;
   const piece = board[rank][file];
   return piece !== null && piece.color !== color;
 };
 
-const getPawnMoves = (rank: number, file: number, color: 'white' | 'black', board: any[][]): string[] => {
+const getPawnMoves = (
+  rank: number,
+  file: number,
+  color: 'white' | 'black',
+  board: any[][]
+): string[] => {
   const moves: string[] = [];
   const direction = color === 'white' ? -1 : 1;
   const startRank = color === 'white' ? 6 : 1;
-  
+
   // Forward move
   if (isSquareEmpty(rank + direction, file, board)) {
     moves.push(indicesToSquare(rank + direction, file));
-    
+
     // Double move from starting position
     if (rank === startRank && isSquareEmpty(rank + 2 * direction, file, board)) {
       moves.push(indicesToSquare(rank + 2 * direction, file));
     }
   }
-  
+
   // Captures
   if (isEnemyPiece(rank + direction, file - 1, color, board)) {
     moves.push(indicesToSquare(rank + direction, file - 1));
@@ -149,21 +166,31 @@ const getPawnMoves = (rank: number, file: number, color: 'white' | 'black', boar
   if (isEnemyPiece(rank + direction, file + 1, color, board)) {
     moves.push(indicesToSquare(rank + direction, file + 1));
   }
-  
+
   return moves;
 };
 
-const getRookMoves = (rank: number, file: number, color: 'white' | 'black', board: any[][]): string[] => {
+const getRookMoves = (
+  rank: number,
+  file: number,
+  color: 'white' | 'black',
+  board: any[][]
+): string[] => {
   const moves: string[] = [];
-  const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-  
+  const directions = [
+    [0, 1],
+    [0, -1],
+    [1, 0],
+    [-1, 0],
+  ];
+
   for (const [dr, df] of directions) {
     for (let i = 1; i < 8; i++) {
       const newRank = rank + dr * i;
       const newFile = file + df * i;
-      
+
       if (newRank < 0 || newRank >= 8 || newFile < 0 || newFile >= 8) break;
-      
+
       if (isSquareEmpty(newRank, newFile, board)) {
         moves.push(indicesToSquare(newRank, newFile));
       } else if (isEnemyPiece(newRank, newFile, color, board)) {
@@ -174,42 +201,63 @@ const getRookMoves = (rank: number, file: number, color: 'white' | 'black', boar
       }
     }
   }
-  
+
   return moves;
 };
 
-const getKnightMoves = (rank: number, file: number, color: 'white' | 'black', board: any[][]): string[] => {
+const getKnightMoves = (
+  rank: number,
+  file: number,
+  color: 'white' | 'black',
+  board: any[][]
+): string[] => {
   const moves: string[] = [];
   const knightMoves = [
-    [-2, -1], [-2, 1], [-1, -2], [-1, 2],
-    [1, -2], [1, 2], [2, -1], [2, 1]
+    [-2, -1],
+    [-2, 1],
+    [-1, -2],
+    [-1, 2],
+    [1, -2],
+    [1, 2],
+    [2, -1],
+    [2, 1],
   ];
-  
+
   for (const [dr, df] of knightMoves) {
     const newRank = rank + dr;
     const newFile = file + df;
-    
+
     if (newRank >= 0 && newRank < 8 && newFile >= 0 && newFile < 8) {
       if (isSquareEmpty(newRank, newFile, board) || isEnemyPiece(newRank, newFile, color, board)) {
         moves.push(indicesToSquare(newRank, newFile));
       }
     }
   }
-  
+
   return moves;
 };
 
-const getBishopMoves = (rank: number, file: number, color: 'white' | 'black', board: any[][]): string[] => {
+const getBishopMoves = (
+  rank: number,
+  file: number,
+  color: 'white' | 'black',
+  board: any[][]
+): string[] => {
   const moves: string[] = [];
-  const directions = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
-  
+  const directions = [
+    [1, 1],
+    [1, -1],
+    [-1, 1],
+    [-1, -1],
+  ];
+
   for (const [dr, df] of directions) {
     for (let i = 1; i < 8; i++) {
       const newRank = rank + dr * i;
       const newFile = file + df * i;
-      
+
       if (newRank < 0 || newRank >= 8 || newFile < 0 || newFile >= 8) break;
-      
+
       if (isSquareEmpty(newRank, newFile, board)) {
         moves.push(indicesToSquare(newRank, newFile));
       } else if (isEnemyPiece(newRank, newFile, color, board)) {
@@ -220,35 +268,47 @@ const getBishopMoves = (rank: number, file: number, color: 'white' | 'black', bo
       }
     }
   }
-  
+
   return moves;
 };
 
-const getQueenMoves = (rank: number, file: number, color: 'white' | 'black', board: any[][]): string[] => {
-  return [
-    ...getRookMoves(rank, file, color, board),
-    ...getBishopMoves(rank, file, color, board)
-  ];
+const getQueenMoves = (
+  rank: number,
+  file: number,
+  color: 'white' | 'black',
+  board: any[][]
+): string[] => {
+  return [...getRookMoves(rank, file, color, board), ...getBishopMoves(rank, file, color, board)];
 };
 
-const getKingMoves = (rank: number, file: number, color: 'white' | 'black', board: any[][]): string[] => {
+const getKingMoves = (
+  rank: number,
+  file: number,
+  color: 'white' | 'black',
+  board: any[][]
+): string[] => {
   const moves: string[] = [];
   const directions = [
-    [-1, -1], [-1, 0], [-1, 1],
-    [0, -1],           [0, 1],
-    [1, -1],  [1, 0],  [1, 1]
+    [-1, -1],
+    [-1, 0],
+    [-1, 1],
+    [0, -1],
+    [0, 1],
+    [1, -1],
+    [1, 0],
+    [1, 1],
   ];
-  
+
   for (const [dr, df] of directions) {
     const newRank = rank + dr;
     const newFile = file + df;
-    
+
     if (newRank >= 0 && newRank < 8 && newFile >= 0 && newFile < 8) {
       if (isSquareEmpty(newRank, newFile, board) || isEnemyPiece(newRank, newFile, color, board)) {
         moves.push(indicesToSquare(newRank, newFile));
       }
     }
   }
-  
+
   return moves;
 };

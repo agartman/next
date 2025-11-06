@@ -36,7 +36,7 @@ const ConnectionStatus = styled.div<{ status: ConnectionStatusProps['status'] }>
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
   font-size: ${({ theme }) => theme.typography.fontSize.small};
-  
+
   &::before {
     content: '';
     width: 8px;
@@ -67,10 +67,7 @@ interface HeaderProps {
   connectionError?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ 
-  connectionStatus, 
-  connectionError 
-}) => {
+export const Header: React.FC<HeaderProps> = ({ connectionStatus, connectionError }) => {
   const getStatusText = () => {
     switch (connectionStatus) {
       case 'connected':

@@ -8,11 +8,11 @@ import { NicknameEntry } from './NicknameEntry';
 import { RoomCreation } from './RoomCreation';
 import { RoomJoining } from './RoomJoining';
 import { socketService } from '../services/socketService';
-import { 
-  SessionCreatedResponse, 
-  RoomCreatedResponse, 
+import {
+  SessionCreatedResponse,
+  RoomCreatedResponse,
   RoomJoinedResponse,
-  ErrorResponse 
+  ErrorResponse,
 } from '../types/websocket';
 
 const RoomInterfaceContainer = styled.div`
@@ -110,7 +110,13 @@ const SuccessMessage = styled.div`
   margin-bottom: ${({ theme }) => theme.spacing.lg};
 `;
 
-type ViewState = 'nickname' | 'room-selection' | 'create-room' | 'join-room' | 'waiting' | 'success';
+type ViewState =
+  | 'nickname'
+  | 'room-selection'
+  | 'create-room'
+  | 'join-room'
+  | 'waiting'
+  | 'success';
 
 interface RoomInterfaceState {
   nickname: string;
@@ -138,59 +144,59 @@ export const RoomInterface: React.FC<RoomInterfaceProps> = ({ onGameReady }) => 
     roomId: '',
     playerColor: null,
     isLoading: false,
-    error: ''
+    error: '',
   });
 
   useEffect(() => {
     // Set up socket event listeners
     const handleSessionCreated = (response: SessionCreatedResponse) => {
       setState(prev => ({ ...prev, isLoading: false }));
-      
+
       if (response.success && response.session) {
         setState(prev => ({
           ...prev,
           sessionId: response.session!.id,
-          error: ''
+          error: '',
         }));
         setView('room-selection');
       } else {
         setState(prev => ({
           ...prev,
-          error: response.error || 'Failed to create session'
+          error: response.error || 'Failed to create session',
         }));
       }
     };
 
     const handleRoomCreated = (response: RoomCreatedResponse) => {
       setState(prev => ({ ...prev, isLoading: false }));
-      
+
       if (response.success && response.roomId && response.playerColor) {
         setState(prev => ({
           ...prev,
           roomId: response.roomId!,
           playerColor: response.playerColor!,
-          error: ''
+          error: '',
         }));
         setView('waiting');
       } else {
         setState(prev => ({
           ...prev,
-          error: response.error || 'Failed to create room'
+          error: response.error || 'Failed to create room',
         }));
       }
     };
 
     const handleRoomJoined = (response: RoomJoinedResponse) => {
       setState(prev => ({ ...prev, isLoading: false }));
-      
+
       if (response.success && response.roomId && response.playerColor) {
         setState(prev => ({
           ...prev,
           roomId: response.roomId!,
           playerColor: response.playerColor!,
-          error: ''
+          error: '',
         }));
-        
+
         // If there's an opponent, the game can start immediately
         if (response.opponent) {
           setView('success');
@@ -199,7 +205,7 @@ export const RoomInterface: React.FC<RoomInterfaceProps> = ({ onGameReady }) => 
               roomId: response.roomId!,
               playerColor: response.playerColor!,
               nickname: state.nickname,
-              sessionId: state.sessionId
+              sessionId: state.sessionId,
             });
           }, 1500);
         } else {
@@ -208,7 +214,7 @@ export const RoomInterface: React.FC<RoomInterfaceProps> = ({ onGameReady }) => 
       } else {
         setState(prev => ({
           ...prev,
-          error: response.error || 'Failed to join room'
+          error: response.error || 'Failed to join room',
         }));
       }
     };
@@ -221,7 +227,7 @@ export const RoomInterface: React.FC<RoomInterfaceProps> = ({ onGameReady }) => 
           roomId: state.roomId,
           playerColor: state.playerColor!,
           nickname: state.nickname,
-          sessionId: state.sessionId
+          sessionId: state.sessionId,
         });
       }, 1500);
     };
@@ -230,23 +236,26 @@ export const RoomInterface: React.FC<RoomInterfaceProps> = ({ onGameReady }) => 
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: response.message
+        error: response.message,
       }));
     };
 
     // Connect to socket and set up listeners
-    socketService.connect().then(() => {
-      socketService.onSessionCreated(handleSessionCreated);
-      socketService.onRoomCreated(handleRoomCreated);
-      socketService.onRoomJoined(handleRoomJoined);
-      socketService.onPlayerJoined(handlePlayerJoined);
-      socketService.onError(handleError);
-    }).catch(() => {
-      setState(prev => ({
-        ...prev,
-        error: 'Failed to connect to server'
-      }));
-    });
+    socketService
+      .connect()
+      .then(() => {
+        socketService.onSessionCreated(handleSessionCreated);
+        socketService.onRoomCreated(handleRoomCreated);
+        socketService.onRoomJoined(handleRoomJoined);
+        socketService.onPlayerJoined(handlePlayerJoined);
+        socketService.onError(handleError);
+      })
+      .catch(() => {
+        setState(prev => ({
+          ...prev,
+          error: 'Failed to connect to server',
+        }));
+      });
 
     // Cleanup listeners on unmount
     return () => {
@@ -255,11 +264,11 @@ export const RoomInterface: React.FC<RoomInterfaceProps> = ({ onGameReady }) => 
   }, [onGameReady, state.roomId, state.playerColor, state.nickname, state.sessionId]);
 
   const handleNicknameSubmit = (nickname: string) => {
-    setState(prev => ({ 
-      ...prev, 
-      nickname, 
-      isLoading: true, 
-      error: '' 
+    setState(prev => ({
+      ...prev,
+      nickname,
+      isLoading: true,
+      error: '',
     }));
     socketService.createSession({ nickname });
   };
@@ -297,9 +306,7 @@ export const RoomInterface: React.FC<RoomInterfaceProps> = ({ onGameReady }) => 
               <WelcomeTitle>Welcome, {state.nickname}!</WelcomeTitle>
               <WelcomeSubtitle>Choose how you'd like to play</WelcomeSubtitle>
             </WelcomeMessage>
-            <ActionButton onClick={() => setView('create-room')}>
-              Create New Room
-            </ActionButton>
+            <ActionButton onClick={() => setView('create-room')}>Create New Room</ActionButton>
             <SecondaryButton onClick={() => setView('join-room')}>
               Join Existing Room
             </SecondaryButton>
@@ -350,9 +357,7 @@ export const RoomInterface: React.FC<RoomInterfaceProps> = ({ onGameReady }) => 
 
   return (
     <RoomInterfaceContainer>
-      <Card>
-        {renderContent()}
-      </Card>
+      <Card>{renderContent()}</Card>
     </RoomInterfaceContainer>
   );
 };

@@ -35,8 +35,8 @@ const Label = styled.label`
 
 const Input = styled.input<{ hasError?: boolean }>`
   padding: ${({ theme }) => theme.spacing.md};
-  border: 2px solid ${({ theme, hasError }) => 
-    hasError ? theme.colors.status.error : theme.colors.text.secondary};
+  border: 2px solid
+    ${({ theme, hasError }) => (hasError ? theme.colors.status.error : theme.colors.text.secondary)};
   border-radius: 8px;
   font-size: ${({ theme }) => theme.typography.fontSize.medium};
   background-color: ${({ theme }) => theme.colors.surface};
@@ -45,7 +45,7 @@ const Input = styled.input<{ hasError?: boolean }>`
 
   &:focus {
     outline: none;
-    border-color: ${({ theme, hasError }) => 
+    border-color: ${({ theme, hasError }) =>
       hasError ? theme.colors.status.error : theme.colors.primary};
   }
 
@@ -83,18 +83,18 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary'; disabled?: boo
     if (disabled) return theme.colors.text.inverse;
     return variant === 'secondary' ? theme.colors.primary : theme.colors.text.inverse;
   }};
-  border: ${({ theme, variant }) => 
+  border: ${({ theme, variant }) =>
     variant === 'secondary' ? `2px solid ${theme.colors.primary}` : 'none'};
   border-radius: 8px;
   font-size: ${({ theme }) => theme.typography.fontSize.medium};
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-  cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
+  cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    background-color: ${({ theme, variant }) => 
+    background-color: ${({ theme, variant }) =>
       variant === 'secondary' ? theme.colors.primary : theme.colors.secondary};
-    color: ${({ theme, variant }) => 
+    color: ${({ theme, variant }) =>
       variant === 'secondary' ? theme.colors.text.inverse : theme.colors.text.inverse};
   }
 
@@ -115,7 +115,7 @@ export const RoomCreation: React.FC<RoomCreationProps> = ({
   onCreateRoom,
   onCancel,
   isLoading = false,
-  error
+  error,
 }) => {
   const [password, setPassword] = useState('');
   const [validationError, setValidationError] = useState('');
@@ -136,7 +136,7 @@ export const RoomCreation: React.FC<RoomCreationProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPassword(value);
-    
+
     // Clear validation error when user starts typing
     if (validationError) {
       setValidationError('');
@@ -145,10 +145,10 @@ export const RoomCreation: React.FC<RoomCreationProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const trimmedPassword = password.trim();
     const error = validatePassword(trimmedPassword);
-    
+
     if (error) {
       setValidationError(error);
       return;
@@ -180,25 +180,14 @@ export const RoomCreation: React.FC<RoomCreationProps> = ({
           />
           {displayError && <ErrorMessage>{displayError}</ErrorMessage>}
           {!displayError && (
-            <HelperText>
-              Share this password with your friend to let them join your room
-            </HelperText>
+            <HelperText>Share this password with your friend to let them join your room</HelperText>
           )}
         </InputGroup>
         <ButtonGroup>
-          <Button 
-            type="button" 
-            variant="secondary" 
-            onClick={onCancel}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={isLoading}>
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            disabled={isDisabled}
-            data-testid="create-room-submit"
-          >
+          <Button type="submit" disabled={isDisabled} data-testid="create-room-submit">
             {isLoading ? 'Creating Room...' : 'Create Room'}
           </Button>
         </ButtonGroup>

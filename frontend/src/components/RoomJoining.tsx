@@ -35,8 +35,8 @@ const Label = styled.label`
 
 const Input = styled.input<{ hasError?: boolean }>`
   padding: ${({ theme }) => theme.spacing.md};
-  border: 2px solid ${({ theme, hasError }) => 
-    hasError ? theme.colors.status.error : theme.colors.text.secondary};
+  border: 2px solid
+    ${({ theme, hasError }) => (hasError ? theme.colors.status.error : theme.colors.text.secondary)};
   border-radius: 8px;
   font-size: ${({ theme }) => theme.typography.fontSize.medium};
   background-color: ${({ theme }) => theme.colors.surface};
@@ -45,7 +45,7 @@ const Input = styled.input<{ hasError?: boolean }>`
 
   &:focus {
     outline: none;
-    border-color: ${({ theme, hasError }) => 
+    border-color: ${({ theme, hasError }) =>
       hasError ? theme.colors.status.error : theme.colors.primary};
   }
 
@@ -83,18 +83,18 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary'; disabled?: boo
     if (disabled) return theme.colors.text.inverse;
     return variant === 'secondary' ? theme.colors.primary : theme.colors.text.inverse;
   }};
-  border: ${({ theme, variant }) => 
+  border: ${({ theme, variant }) =>
     variant === 'secondary' ? `2px solid ${theme.colors.primary}` : 'none'};
   border-radius: 8px;
   font-size: ${({ theme }) => theme.typography.fontSize.medium};
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-  cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
+  cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    background-color: ${({ theme, variant }) => 
+    background-color: ${({ theme, variant }) =>
       variant === 'secondary' ? theme.colors.primary : theme.colors.secondary};
-    color: ${({ theme, variant }) => 
+    color: ${({ theme, variant }) =>
       variant === 'secondary' ? theme.colors.text.inverse : theme.colors.text.inverse};
   }
 
@@ -115,7 +115,7 @@ export const RoomJoining: React.FC<RoomJoiningProps> = ({
   onJoinRoom,
   onCancel,
   isLoading = false,
-  error
+  error,
 }) => {
   const [roomId, setRoomId] = useState('');
   const [password, setPassword] = useState('');
@@ -147,7 +147,7 @@ export const RoomJoining: React.FC<RoomJoiningProps> = ({
   const handleRoomIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setRoomId(value);
-    
+
     // Clear validation error when user starts typing
     if (validationErrors.roomId) {
       setValidationErrors(prev => ({ ...prev, roomId: undefined }));
@@ -157,7 +157,7 @@ export const RoomJoining: React.FC<RoomJoiningProps> = ({
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPassword(value);
-    
+
     // Clear validation error when user starts typing
     if (validationErrors.password) {
       setValidationErrors(prev => ({ ...prev, password: undefined }));
@@ -166,13 +166,13 @@ export const RoomJoining: React.FC<RoomJoiningProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const trimmedRoomId = roomId.trim();
     const trimmedPassword = password.trim();
-    
+
     const roomIdError = validateRoomId(trimmedRoomId);
     const passwordError = validatePassword(trimmedPassword);
-    
+
     if (roomIdError || passwordError) {
       setValidationErrors({
         roomId: roomIdError || undefined,
@@ -203,13 +203,9 @@ export const RoomJoining: React.FC<RoomJoiningProps> = ({
             autoComplete="off"
             autoFocus
           />
-          {validationErrors.roomId && (
-            <ErrorMessage>{validationErrors.roomId}</ErrorMessage>
-          )}
+          {validationErrors.roomId && <ErrorMessage>{validationErrors.roomId}</ErrorMessage>}
           {!validationErrors.roomId && (
-            <HelperText>
-              Ask your friend for the room ID they created
-            </HelperText>
+            <HelperText>Ask your friend for the room ID they created</HelperText>
           )}
         </InputGroup>
 
@@ -225,27 +221,16 @@ export const RoomJoining: React.FC<RoomJoiningProps> = ({
             disabled={isLoading}
             autoComplete="off"
           />
-          {validationErrors.password && (
-            <ErrorMessage>{validationErrors.password}</ErrorMessage>
-          )}
+          {validationErrors.password && <ErrorMessage>{validationErrors.password}</ErrorMessage>}
         </InputGroup>
 
         {error && <ErrorMessage>{error}</ErrorMessage>}
 
         <ButtonGroup>
-          <Button 
-            type="button" 
-            variant="secondary" 
-            onClick={onCancel}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={isLoading}>
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            disabled={isDisabled}
-            data-testid="join-room-submit"
-          >
+          <Button type="submit" disabled={isDisabled} data-testid="join-room-submit">
             {isLoading ? 'Joining Room...' : 'Join Room'}
           </Button>
         </ButtonGroup>

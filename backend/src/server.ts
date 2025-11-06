@@ -6,21 +6,24 @@ import { SessionManager } from './managers/SessionManager';
 import { RoomManager } from './managers/RoomManager';
 import { ChessGameEngine } from './managers/ChessGameEngine';
 import { WebSocketHandler } from './handlers/WebSocketHandler';
-import { 
-    ClientToServerEvents, 
-    ServerToClientEvents, 
-    InterServerEvents, 
-    SocketData 
+import {
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData,
 } from './types/websocket';
 
 const app = express();
 const server = createServer(app);
-const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, {
+const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(
+  server,
+  {
     cors: {
-        origin: "http://localhost:3000",
-        methods: ["GET", "POST"]
-    }
-});
+      origin: 'http://localhost:3000',
+      methods: ['GET', 'POST'],
+    },
+  }
+);
 
 // Initialize managers
 const sessionManager = new SessionManager();
@@ -36,16 +39,16 @@ app.use(express.json());
 
 // Basic health check endpoint
 app.get('/health', (_req, res) => {
-    res.json({
-        status: 'OK',
-        message: 'Chess backend server is running',
-        activeSessions: sessionManager.getSessionCount(),
-        activeRooms: roomManager.getRoomCount()
-    });
+  res.json({
+    status: 'OK',
+    message: 'Chess backend server is running',
+    activeSessions: sessionManager.getSessionCount(),
+    activeRooms: roomManager.getRoomCount(),
+  });
 });
 
 const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, () => {
-    console.log(`Chess backend server running on port ${PORT}`);
+  console.log(`Chess backend server running on port ${PORT}`);
 });

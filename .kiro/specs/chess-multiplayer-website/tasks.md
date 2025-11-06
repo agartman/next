@@ -25,11 +25,6 @@
   - _Requirements: 2.1, 2.2, 2.5_
 
 - [x] 4. Integrate chess game engine
-
-
-
-
-
   - Define TypeScript interfaces for ChessGameState, ChessMove, and GameResult
   - Set up Chess.js library integration with TypeScript types
   - Create ChessGameEngine class wrapper with full type safety
@@ -39,11 +34,6 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
 - [x] 5. Implement WebSocket communication layer
-
-
-
-
-
   - Define TypeScript interfaces for all Socket.io event payloads
   - Set up Socket.io server with typed event handlers
   - Create room joining and creation events with type validation
@@ -53,11 +43,6 @@
   - _Requirements: 2.2, 2.3, 2.4, 5.1, 5.2, 5.3, 5.4_
 
 - [x] 6. Build React frontend foundation
-
-
-
-
-
   - Create React app structure with TypeScript and routing
   - Set up styled-components with TypeScript theme and global styles
   - Implement Socket.io client connection with typed events
@@ -66,11 +51,6 @@
   - _Requirements: 1.1, 1.2_
 
 - [x] 7. Create nickname entry and room interface
-
-
-
-
-
   - Build nickname input component with TypeScript and validation
   - Create room creation form with password input and type safety
   - Implement room joining interface with TypeScript
@@ -79,12 +59,6 @@
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.5_
 
 - [x] 8. Develop interactive chess board component
-
-
-
-
-
-
   - Create chess board UI with 8x8 grid rendering and TypeScript
   - Implement piece positioning and visual representation with type safety
   - Add click handlers for piece selection and movement with typed events
@@ -93,11 +67,6 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
 - [x] 9. Implement real-time game synchronization
-
-
-
-
-
   - Connect frontend chess board to typed WebSocket events
   - Handle incoming moves and board state updates with type safety
   - Implement turn-based move restrictions with TypeScript
