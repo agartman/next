@@ -4,7 +4,8 @@ import { ThemeProvider } from 'styled-components';
 import { theme } from './styles/theme';
 import { GlobalStyles } from './styles/GlobalStyles';
 import { Layout } from './components/Layout';
-import { HomePage, GamePage } from './pages';
+import { HomePage } from './pages/HomePage';
+import { GamePage } from './pages/GamePage';
 import { socketService } from './services/socketService';
 import { ConnectionStatusProps } from './types/game';
 
